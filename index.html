@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>버스 안내 전광판 (통합)</title>
+  <style>
+    /* 폰트 로딩 실패 시 대체 폰트만 사용 */
+    /* @font-face {
+      font-family: 'HY견고딕';
+      src: url('HY견고딕.ttf') format('truetype');
+      font-display: swap;
+      font-weight: normal;
+      font-style: normal;
+    } */
+    
+    /* 폰트 로딩 실패 시 대체 폰트 */
+    .font-fallback {
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      background-color: white;
+      height: 100vh;
+      gap: 20px;
+    }
+    .square {
+      position: relative;
+      width: 1280px;
+      height: 320px;
+      background-color: rgb(33, 33, 33);
+      border: 20px solid rgb(20, 20, 20);
+      overflow: hidden;
+    }
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(128, 1fr);
+      grid-template-rows: repeat(32, 1fr);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .cell { border: 0.5px solid rgb(60, 60, 60); aspect-ratio: 1 / 1; }
+    .title {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: yellow;
+      font-size: 120px;
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* 모바일에서만 굵게 표시 */
+    @media (max-width: 768px) {
+      .title {
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+      }
+    }
+    .title span { margin: 0 100px; }
+    .scroll-text {
+      position: absolute;
+      bottom: 20px;
+      white-space: nowrap;
+      font-size: 120px;
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      z-index: 1;
+      display: none;
+      transform: translateX(0);
+    }
+    
+    /* 모바일에서만 굵게 표시 */
+    @media (max-width: 768px) {
+      .scroll-text {
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+      }
+    }
+    .yellow { color: yellow; }
+    .orange { color: orange; }
+    .red { color: red; }
+    .green { color: lime; }
+    .third-top, .third-bottom, .fourth-top, .fourth-bottom {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 100px;
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      z-index: 1;
+      display: none;
+      white-space: nowrap;
+    }
+    
+    /* 모바일에서만 굵게 표시 */
+    @media (max-width: 768px) {
+      .third-top, .third-bottom, .fourth-top, .fourth-bottom {
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+      }
+    }
+    .third-top { top: 20px; }
+    .third-bottom { bottom: 20px; }
+    .fourth-top { top: 20px; }
+    .fourth-bottom { bottom: 20px; }
+    .location-display {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: #333;
+      font-size: 18px;
+      font-family: monospace;
+      z-index: 10;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 15px;
+      border-radius: 8px;
+      white-space: nowrap;
+      border: 2px solid #666;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      max-width: 500px;
+    }
+    
+    /* 두 번째 디스플레이 스타일 */
+    .top-label {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 110px;
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      color: lime;
+      z-index: 1;
+      white-space: nowrap;
+      display: none;
+    }
+    
+    /* 모바일에서만 굵게 표시 */
+    @media (max-width: 768px) {
+      .top-label {
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+      }
+    }
+    .scroll-lcd {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      white-space: nowrap;
+      font-size: 110px;
+      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      color: yellow;
+      z-index: 1;
+      left: 0;
+      display: none;
+    }
+    
+    /* 모바일에서만 굵게 표시 */
+    @media (max-width: 768px) {
+      .scroll-lcd {
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+      }
+    }
+    .center-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: red;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      display: none;
+    }
+    
+    /* 버튼 스타일 */
+    .control-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .control-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: 'HY견고딕', sans-serif;
+      background-color: #333;
+      color: white;
+      border: 2px solid #555;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .control-btn:hover {
+      background-color: #555;
+      border-color: #777;
+    }
+    .control-btn.active {
+      background-color: #007bff;
+      border-color: #0056b3;
+    }
+    
+    /* 구형/신형 버튼 스타일 */
+    .model-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .model-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-family: 'HY견고딕', sans-serif;
+      background-color: #555;
+      color: white;
+      border: 2px solid #777;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .model-btn:hover {
+      background-color: #777;
+      border-color: #999;
+    }
+    .model-btn.active {
+      background-color: #37d85c;
+      border-color: #17b63c;
+    }
+  </style>
+</head>
+<body>
+  <div class="square">
+    <!-- 첫 번째 디스플레이 요소들 -->
+    <div class="title" id="title"><span>알</span><span>림</span></div>
+
+    <!-- 스크롤 문구 1~8 -->
+    <div class="scroll-text" id="scroll-text-1">
+      <span class="yellow">버스가 주행중에는 자리에서 </span><span class="red">이동을 삼가하시고</span>
+      <span class="green">내리실분은 앉은자리에서 </span><span class="red">벨을</span>
+      <span class="yellow">미리 눌러주시고 </span><span class="red">버스가 완전히 정차한후</span>
+      <span class="green">하차 해주시기 바랍니다.</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-2">
+      <span class="red">*무제한 서울 대중교통 이용*</span><span class="green">모바일티머니 </span><span class="yellow">기후동행카드</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-3">
+      <span class="yellow">차내 </span><span class="red">통화를 </span><span class="yellow">하실때는 </span><span class="red">귓속말로</span>
+      <span class="green"> 해주시고 </span><span class="yellow">옆 사람에게 </span><span class="red">방해가 </span><span class="green">되지 않도록 </span><span class="yellow">해주시기 </span><span class="red">바랍니다.</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-4">
+      <span class="yellow">이 차량은 </span><span class="green">공기청정기</span><span class="yellow">를 가동하여 </span><span class="red">바이러스,세균 </span><span class="yellow">의 2차 감염을 </span><span class="green">예방 </span><span class="yellow">하고 있습니다.</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-5">
+      <span class="orange">교통카드 </span><span class="red">잔액이 궁금할땐? </span><span class="orange">모바일티머니 앱! </span><span class="green">바로 충전도 가능해요~</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-6">
+      <span class="orange">깨끗하고,</span><span class="red"> 안전하고,</span><span class="green"> 친절한 </span><span class="orange"> 서비스로 고객 여러분께 </span><span class="green"> 더욱 가까이 다가가겠습니다 </span><span class="orange"> . </span>
+    </div>
+    <div class="scroll-text" id="scroll-text-7">
+      <span class="red">안전을 위해</span><span class="orange"> 하차시 좌우 확인! <</span><span class="green">길을 건널때는</span><span class="red"> 횡단보도 이용</span><span class="orange">▶</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-8">
+      <span class="orange">사람이 보이면 </span><span class="red"> 일단,멈춤!  "</span><span class="orange">한순간의 무단횡단,</span><span class="red">교통사고도 </span><span class="green">한순간입니다.</span>
+    </div>
+
+    <div class="third-top" id="third-top">
+      <span class="yellow">목동운수 </span><span class="green">양천</span><span class="red">01</span>
+    </div>
+    <div class="third-bottom" id="third-bottom">
+      <span class="green">첫차 </span><span class="red">05:30 </span><span class="green">막차 </span><span class="red">23:40</span>
+    </div>
+
+    <div class="fourth-top" id="fourth-top"></div>
+    <div class="fourth-bottom" id="fourth-bottom"></div>
+
+    <!-- 두 번째 디스플레이 요소들 -->
+    <div class="top-label" id="topLabel">이번 정류소</div>
+    <div class="scroll-lcd" id="scrollLcd">양평한신아파트, 9호선선유도역</div>
+    <div class="center-line" id="centerLine"></div>
+
+    <div class="grid-overlay" id="grid-overlay"></div>
+  </div>
+  
+  <div class="location-display" id="locationDisplay">위치: 불명</div>
+
+  <!-- 구형/신형 선택 버튼들 -->
+  <div class="model-buttons">
+    <button class="model-btn" id="oldModelBtn">구형</button>
+    <button class="model-btn active" id="newModelBtn">신형</button>
+  </div>
+
+  <!-- 제어 버튼들 -->
+  <div class="control-buttons">
+    <button class="control-btn active" id="display1Btn">안내 문구</button>
+    <button class="control-btn" id="display2Btn">정류소 안내</button>
+  </div>
+
+  <!-- 오디오 파일들 (파일이 없어도 작동하도록 설정) -->
+  <!-- 오디오 파일들 (파일이 없어도 작동하도록 설정) -->
+  <audio id="announcement" src="sunyudo.mp3" preload="none"></audio>
+  <audio id="dangsanAudio" src="dangsan.mp3" preload="none"></audio>
+  <audio id="dangsanSunAudio" src="dangsanSun.mp3" preload="none"></audio>
+  <audio id="mok6Audio" src="mok6.mp3" preload="none"></audio>
+  <audio id="mok5bAudio" src="mok5b.wav" preload="none"></audio>
+  <audio id="mok5cAudio" src="paris.wav" preload="none"></audio>
+  <audio id="mokStadiumAudio" src="mok5c.wav" preload="none"></audio>
+  <audio id="wolchonAudio" src="mok1.mp3" preload="none"></audio>
+
+  <script>
+    // 전역 변수들
+    let currentDisplay = 1; // 1: 안내 문구, 2: 정류소 안내
+    let currentModel = 'new'; // 'old': 구형, 'new': 신형
+    let display1Interval;
+    let display2Timeout;
+    let previousLat = null;
+    let previousLon = null;
+    let currentDirection = 'unknown'; // 'up': 상행(당산→목동), 'down': 하행(목동→당산)
+    let isAnnouncementComplete = true; // 정류소 안내 완료 상태 추적
+    let lastAnnouncedStation = null; // 마지막으로 안내한 정류소 추적
+    
+    // 첫 번째 디스플레이 관련 변수들
+    const scrollTexts = [
+      { id: 'scroll-text-1', duration: 24370 },
+      { id: 'scroll-text-2', duration: 10000 },
+      { id: 'scroll-text-3', duration: 17000 },
+      { id: 'scroll-text-4', duration: 15000 },
+      { id: 'scroll-text-5', duration: 13000 },
+      { id: 'scroll-text-6', duration: 15000 },
+      { id: 'scroll-text-7', duration: 11000 },
+      { id: 'scroll-text-8', duration: 13000 }
+    ];
+
+    const title = document.getElementById('title');
+    const thirdTop = document.getElementById('third-top');
+    const thirdBottom = document.getElementById('third-bottom');
+    const fourthTop = document.getElementById('fourth-top');
+    const fourthBottom = document.getElementById('fourth-bottom');
+    const locationDisplay = document.getElementById('locationDisplay');
+    const containerWidth = 1280;
+    const speed = 330;
+    let lastIndex = 0;
+    let currentSpeed = 31.4;
+    let inTarget = false;
+
+    // 두 번째 디스플레이 관련 변수들
+    const topLabel = document.getElementById('topLabel');
+    const scrollLcd = document.getElementById('scrollLcd');
+    const centerLine = document.getElementById('centerLine');
+    const audio = document.getElementById('announcement'); // null일 수 있음
+
+    // 버튼 요소들
+    const display1Btn = document.getElementById('display1Btn');
+    const display2Btn = document.getElementById('display2Btn');
+    const oldModelBtn = document.getElementById('oldModelBtn');
+    const newModelBtn = document.getElementById('newModelBtn');
+
+    // 방향 분석 함수
+    function analyzeDirection(currentLat, currentLon) {
+      if (previousLat === null || previousLon === null) {
+        // 첫 번째 위치 업데이트인 경우 방향을 알 수 없음
+        return 'unknown';
+      }
+      
+      // 위도 변화로 방향 판단 (위도가 증가하면 북쪽으로 이동)
+      const latChange = currentLat - previousLat;
+      const lonChange = currentLon - previousLon;
+      
+      // 더 정확한 방향 판단을 위해 임계값을 낮춤
+      const threshold = 0.0005; // 약 50미터 정도의 변화
+      
+      // 목동6단지상가 근처 (37.536231, 126.882298)에서 선유도역 근처 (37.539756, 126.887565)로 이동하는 경우
+      // 위도가 증가하고 경도도 증가하는 것이 하행(목동→당산)
+      // 당산역에서 선유도역으로 가면 상행(당산→목동), 6단지에서 선유도역으로 가면 하행(목동→당산)
+      if (Math.abs(latChange) > threshold) {
+        if (latChange > 0) {
+          return 'down'; // 하행: 목동→당산 (북쪽으로 이동)
+        } else {
+          return 'up'; // 상행: 당산→목동 (남쪽으로 이동)
+        }
+      }
+      
+      // 위도 변화가 작은 경우 경도 변화로 판단
+      if (Math.abs(lonChange) > threshold) {
+        if (lonChange > 0) {
+          return 'down'; // 하행: 목동→당산 (동쪽으로 이동)
+        } else {
+          return 'up'; // 상행: 당산→목동 (서쪽으로 이동)
+        }
+      }
+      
+      return 'unknown';
+    }
+    
+    // 색상 변경 함수들
+    function updateColors() {
+      const yellowElements = document.querySelectorAll('.yellow');
+      const orangeElements = document.querySelectorAll('.orange');
+      const greenElements = document.querySelectorAll('.green');
+      
+      if (currentModel === 'old') {
+        // 구형: 노란색 → 주황색, 주황색 → 주황색 유지, 초록색 → 진한 초록색
+        yellowElements.forEach(el => {
+          el.style.color = 'orange';
+        });
+        orangeElements.forEach(el => {
+          el.style.color = 'orange';
+        });
+        greenElements.forEach(el => {
+          el.style.color = '#37d85c'; // 밝은 초록색
+        });
+      } else {
+        // 신형: 노란색 → 노란색 유지, 주황색 → 노란색, 초록색 → 밝은 초록색
+        yellowElements.forEach(el => {
+          el.style.color = 'yellow';
+        });
+        orangeElements.forEach(el => { 
+          el.style.color = 'yellow';
+        });
+        greenElements.forEach(el => {
+          el.style.color = 'lime';
+        });
+      }
+      
+      // 정류소 안내 요소들의 색상도 업데이트
+      if (currentDisplay === 2) {
+        if (currentModel === 'old') {
+          // 구형: 모든 노란색 → 주황색, 모든 초록색 → 밝은 초록색
+          scrollLcd.style.color = 'orange';
+          topLabel.style.color = '#37d85c';
+        } else {
+          // 신형: 모든 주황색 → 노란색, 모든 초록색 → 밝은 초록색
+          scrollLcd.style.color = 'yellow';
+          topLabel.style.color = 'lime';
+        }
+      }
+      
+      // "알림" 제목 색상도 업데이트
+      if (currentModel === 'old') {
+        title.style.color = 'orange'; // 구형: 노란색 → 주황색
+      } else {
+        title.style.color = 'yellow'; // 신형: 원래 노란색
+      }
+    }
+    
+    // 첫 번째 디스플레이 함수들
+    function randomNext() {
+      if (inTarget || currentDisplay !== 1) return;
+      let next;
+      do { next = Math.floor(Math.random() * 8) + 1; } while (next === lastIndex);
+      lastIndex = next;
+      showMessage(next);
+    }
+
+    function showMessage(index) {
+      if (currentDisplay !== 1) return;
+      
+      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      thirdTop.style.display = 'none';
+      thirdBottom.style.display = 'none';
+      fourthTop.style.display = 'none';
+      fourthBottom.style.display = 'none';
+      title.style.display = 'flex';
+
+      if (index === 6) {
+        title.style.display = 'none';
+        thirdTop.style.display = 'block';
+        thirdBottom.style.display = 'block';
+        updateColors(); // 색상 업데이트
+        display1Interval = setTimeout(randomNext, 5000);
+        return;
+      }
+
+      if (index === 7) {
+        title.style.display = 'none';
+        thirdTop.style.display = 'block';
+        thirdBottom.style.display = 'block';
+        updateColors(); // 색상 업데이트
+        display1Interval = setTimeout(randomNext, 5000);
+        return;
+      }
+
+      const elem = document.getElementById(`scroll-text-${index}`);
+      elem.style.display = 'block';
+      updateColors(); // 색상 업데이트
+      const width = elem.scrollWidth;
+      const totalDistance = width + containerWidth;
+      const duration = totalDistance / speed;
+      elem.style.transform = `translateX(0)`;
+      elem.style.transition = 'none';
+
+      setTimeout(() => {
+        elem.style.transition = `transform ${duration}s linear`;
+        elem.style.transform = `translateX(-${totalDistance}px)`;
+      }, 500);
+
+      display1Interval = setTimeout(randomNext, scrollTexts[index - 1].duration);
+    }
+
+    // 두 번째 디스플레이 함수들
+    function startDisplay2() {
+      console.log('startDisplay2 함수 시작');
+      currentDisplay = 2; // 디스플레이 모드 설정
+      
+      // 모든 첫 번째 디스플레이 요소 숨기기
+      title.style.display = 'none';
+      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      thirdTop.style.display = 'none';
+      thirdBottom.style.display = 'none';
+      fourthTop.style.display = 'none';
+      fourthBottom.style.display = 'none';
+      console.log('첫 번째 디스플레이 요소들 숨김 완료');
+
+      // 두 번째 디스플레이 요소들 표시
+      topLabel.textContent = '이번 정류소';
+      topLabel.style.display = 'block';
+      scrollLcd.textContent = '양평한신아파트, 9호선선유도역';
+      scrollLcd.style.display = 'block';
+      centerLine.style.display = 'block';
+      updateColors(); // 색상 업데이트
+      console.log('두 번째 디스플레이 요소들 표시 완료: 이번 정류소 - 양평한신아파트, 9호선선유도역');
+      
+      // 버튼 스타일 업데이트
+      display2Btn.classList.add('active');
+      display1Btn.classList.remove('active');
+
+      const textWidth = scrollLcd.scrollWidth;
+      const totalDistance = textWidth + containerWidth;
+      const duration = totalDistance / speed;
+
+      scrollLcd.style.transform = 'translateX(0)';
+      scrollLcd.style.transition = 'none';
+      
+      // 오디오 재생 (사용자 상호작용 후에만)
+      playAudioSafely('announcement');
+
+      setTimeout(() => {
+        scrollLcd.style.transition = `transform ${duration}s linear`;
+        scrollLcd.style.transform = `translateX(-${totalDistance}px)`;
+      }, 500);
+
+      // 5.38초 후 → 첫 화면 숨기고 → 다음 정류소 표시
+      display2Timeout = setTimeout(() => {
+        scrollLcd.style.display = 'none';
+        topLabel.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = '다음 정류소';
+          topLabel.style.display = 'block';
+
+          scrollLcd.textContent = '지하철 2,9호선 당산역';
+          scrollLcd.style.left = '50%';
+          scrollLcd.style.top = '50%';
+          scrollLcd.style.transform = 'translateX(-50%) translateY(0%)';
+          scrollLcd.style.transition = 'none';
+          scrollLcd.style.display = 'block';
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+        }, 500);
+      }, 5380);
+
+      // 15초 후 → 영어 안내로 교체
+      setTimeout(() => {
+        topLabel.textContent = 'THIS STOP IS';
+        topLabel.style.display = 'block';
+
+        scrollLcd.textContent = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+        scrollLcd.style.left = '0';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateY(0%)';
+        scrollLcd.style.transition = 'none';
+        scrollLcd.style.display = 'block';
+        updateColors(); // 색상 업데이트
+
+        const engTextWidth = scrollLcd.scrollWidth;
+        const engTotalDistance = engTextWidth + containerWidth;
+        const engDuration = engTotalDistance / speed;
+
+        setTimeout(() => {
+          scrollLcd.style.transition = `transform ${engDuration}s linear`;
+          scrollLcd.style.transform = `translate(-${engTotalDistance}px, 0%)`;
+        }, 500);
+      }, 15000);
+
+      // 21.85초 후 → 모두 숨김 (0.5초)
+      setTimeout(() => {
+        topLabel.style.display = 'none';
+        scrollLcd.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = 'NEXT STOP IS';
+          topLabel.style.display = 'block';
+
+          scrollLcd.textContent = 'Line 2 Dangsan Station';
+          scrollLcd.style.left = '0';
+          scrollLcd.style.top = '50%';
+          scrollLcd.style.transform = 'translateY(0%)';
+          scrollLcd.style.transition = 'none';
+          scrollLcd.style.display = 'block';
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+
+          const eng2Width = scrollLcd.scrollWidth;
+          const eng2TotalDistance = eng2Width + containerWidth;
+          const eng2Duration = eng2TotalDistance / speed;
+
+          // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
+          const engNextDelay = engNextText === 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital' ? 3500 : 500;
+          setTimeout(() => {
+            scrollLcd.style.transition = `transform ${eng2Duration}s linear`;
+            scrollLcd.style.transform = `translate(-${eng2TotalDistance}px, 0%)`;
+            // 정류소 안내 완료 후 안내 문구로 자동 전환
+            setTimeout(() => {
+              isAnnouncementComplete = true; // 정류소 안내 완료 표시
+              console.log('정류소 안내 완료 - 다음 정류소 안내 준비됨');
+              switchToDisplay1();
+            }, (eng2Duration + 0.5) * 1000);
+          }, engNextDelay);
+        }, 500);
+      }, 21850);
+    }
+
+    // 디스플레이 전환 함수들
+    function switchToDisplay1() {
+      currentDisplay = 1;
+      
+      // 두 번째 디스플레이 요소들 숨기기
+      topLabel.style.display = 'none';
+      scrollLcd.style.display = 'none';
+      centerLine.style.display = 'none';
+      
+      // 첫 번째 디스플레이 시작
+      randomNext();
+      
+      // 버튼 스타일 업데이트
+      display1Btn.classList.add('active');
+      display2Btn.classList.remove('active');
+      
+      // 색상 업데이트
+      updateColors();
+    }
+
+    // 정류소별 안내 함수 (지정된 오디오로)
+    function startStationAnnouncementWithAudio(station, audioId) {
+      console.log(`${station.name} 정류소 안내 시작 (지정 오디오: ${audioId})`);
+      currentDisplay = 2;
+      
+      // 첫 번째 디스플레이 정지
+      if (display1Interval) {
+        clearTimeout(display1Interval);
+        console.log('첫 번째 디스플레이 타이머 정지됨');
+      }
+      
+      // 모든 첫 번째 디스플레이 요소 숨기기
+      title.style.display = 'none';
+      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      thirdTop.style.display = 'none';
+      thirdBottom.style.display = 'none';
+      fourthTop.style.display = 'none';
+      fourthBottom.style.display = 'none';
+      
+      // 두 번째 디스플레이 요소들 표시
+      topLabel.textContent = '이번 정류소';
+      topLabel.style.display = 'block';
+      scrollLcd.textContent = station.displayText;
+      scrollLcd.style.display = 'block';
+      centerLine.style.display = 'block';
+      updateColors(); // 색상 업데이트
+      
+      // 목동5단지B상가와 목5동주민센터는 가운데 정렬, 나머지는 스크롤
+      if (station.name === '목동5단지B상가' || station.name === '목동5단지C상가') {
+        scrollLcd.style.left = '50%';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateX(-50%) translateY(0%)';
+        scrollLcd.style.transition = 'none';
+      } else {
+        const textWidth = scrollLcd.scrollWidth;
+        const totalDistance = textWidth + containerWidth;
+        const duration = totalDistance / speed;
+
+        scrollLcd.style.left = '0';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateY(0%)';
+        scrollLcd.style.transition = 'none';
+        
+        setTimeout(() => {
+          scrollLcd.style.transition = `transform ${duration}s linear`;
+          scrollLcd.style.transform = `translateX(-${totalDistance}px)`;
+        }, 500);
+      }
+      
+      // 지정된 오디오 재생
+      console.log(`지정된 오디오 재생: ${audioId}`);
+      playAudioSafely(audioId);
+
+      // 5.38초 후 → 첫 화면 숨기고 → 다음 정류소 표시
+      display2Timeout = setTimeout(() => {
+        scrollLcd.style.display = 'none';
+        topLabel.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = '다음 정류소';
+          topLabel.style.color = currentModel === 'old' ? '#37d85c' : 'lime';
+          topLabel.style.display = 'block';
+
+          // 다음 정류소 텍스트 설정
+          let nextStationText = '';
+          if (station.name === '목동야구장') {
+            nextStationText = '목5동주민센터';
+          } else if (station.name === '목동5단지C상가') {
+            nextStationText = '목동5단지B상가';
+          } else if (station.name === '목동5단지B상가') {
+            nextStationText = '목동6단지상가,이대병원입구';
+          } else if (station.name === '목동6단지상가') {
+            nextStationText = '양평한신아파트, 9호선선유도역';
+          } else if (station.name === '선유도역') {
+            // 방향에 따라 다음 정류장 다르게 설정
+            if (currentDirection === 'up') {
+              nextStationText = '목동1단지상가,이대병원입구'; // 상행: 당산→목동
+            } else {
+              nextStationText = '지하철 2,9호선 당산역'; // 하행: 목동→당산
+            }
+          } else if (station.name === '월촌중학교') {
+            nextStationText = '목동2단지상가';
+          } else if (station.name === '당산역') {
+            nextStationText = '양평한신아파트, 9호선선유도역';
+          }
+          
+          scrollLcd.textContent = nextStationText;
+          scrollLcd.style.display = 'block';
+
+          // 다음 정류소가 목동5단지B상가, 목5동주민센터, 목동야구장인 경우 가운데 정렬
+          if (nextStationText === '목동5단지B상가' || nextStationText === '목5동주민센터' || nextStationText === '목동야구장,행복한세상' || nextStationText === '목동2단지상가') {
+            scrollLcd.style.left = '50%';
+            scrollLcd.style.top = '50%';
+            scrollLcd.style.transform = 'translateX(-50%) translateY(0%)';
+            scrollLcd.style.transition = 'none';
+          } else {
+            scrollLcd.style.left = '0';
+            scrollLcd.style.top = '50%';
+            scrollLcd.style.transform = 'translateY(0%)';
+            scrollLcd.style.transition = 'none';
+            
+            // 다음 정류소 텍스트도 스크롤 애니메이션 적용
+            const nextTextWidth = scrollLcd.scrollWidth;
+            const nextTotalDistance = nextTextWidth + containerWidth;
+            const nextDuration = nextTotalDistance / speed;
+
+            setTimeout(() => {
+              scrollLcd.style.transition = `transform ${nextDuration}s linear`;
+              scrollLcd.style.transform = `translateX(-${nextTotalDistance}px)`;
+            }, 500);
+          }
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+        }, 500);
+      }, 5380);
+
+      // 12초 후 → 영어 안내로 교체
+      setTimeout(() => {
+        topLabel.textContent = 'THIS STOP IS';
+        topLabel.style.display = 'block';
+
+        // 영어 텍스트 설정
+        let engText = '';
+        if (station.name === '목동야구장') {
+          engText = 'Mokdong Baseball Stadium, Happy World';
+        } else if (station.name === '목동5단지C상가') {
+          engText = 'Mok 5dong Office';
+        } else if (station.name === '목동5단지B상가') {
+          engText = 'Mokdong 5 Danji B Store';
+        } else if (station.name === '목동6단지상가') {
+          engText = 'Mokdong 6 Danji Store, Ewha Womans Univ. Mok-dong Hospital';
+        } else if (station.name === '선유도역') {
+          engText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+        } else if (station.name === '목동1단지상가,이대병원입구') {
+          engText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital';
+        } else if (station.name === '당산역') {
+          engText = 'Line 2 Dangsan Station';
+        }
+
+        scrollLcd.textContent = engText;
+        scrollLcd.style.left = '0';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateY(0%)';
+        scrollLcd.style.transition = 'none';
+        scrollLcd.style.display = 'block';
+        updateColors(); // 색상 업데이트
+
+        const engTextWidth = scrollLcd.scrollWidth;
+        const engTotalDistance = engTextWidth + containerWidth;
+        const engDuration = engTotalDistance / speed;
+
+        setTimeout(() => {
+          scrollLcd.style.transition = `transform ${engDuration}s linear`;
+          scrollLcd.style.transform = `translate(-${engTotalDistance}px, 0%)`;
+        }, 500);
+      }, 12000);
+
+      // 21.85초 후 → 모두 숨김 (0.5초)
+      setTimeout(() => {
+        topLabel.style.display = 'none';
+        scrollLcd.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = 'NEXT STOP IS';
+          topLabel.style.display = 'block';
+
+          // 영어 다음 정류소 텍스트 설정
+          let engNextText = '';
+          if (station.name === '목동야구장') {
+            engNextText = 'Mok 5dong Office';
+          } else if (station.name === '목동5단지C상가') {
+            engNextText = 'Mokdong 5 Danji B Store';
+          } else if (station.name === '목동5단지B상가') {
+            engNextText = 'Mokdong 6 Danji Store, Ewha Womans Univ. Mok-dong Hospital';
+          } else if (station.name === '목동6단지상가') {
+            engNextText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+          } else if (station.name === '선유도역') {
+            // 방향에 따라 영어 다음 정류소 다르게 설정
+            if (currentDirection === 'up') {
+              engNextText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital'; // 상행: 당산→목동
+            } else {
+              engNextText = 'Line 2,9 Dangsan Station'; // 하행: 목동→당산
+            }
+          } else if (station.name === '월촌중학교') {
+            engNextText = 'Mokdong 2 Danji Stores';
+          } else if (station.name === '당산역') {
+            engNextText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+          }
+
+          scrollLcd.textContent = engNextText;
+          scrollLcd.style.left = '0';
+          scrollLcd.style.top = '50%';
+          scrollLcd.style.transform = 'translateY(0%)';
+          scrollLcd.style.transition = 'none';
+          scrollLcd.style.display = 'block';
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+
+          const engNextTextWidth = scrollLcd.scrollWidth;
+          const engNextTotalDistance = engNextTextWidth + containerWidth;
+          const engNextDuration = engNextTotalDistance / speed;
+
+          setTimeout(() => {
+            scrollLcd.style.transition = `transform ${engNextDuration}s linear`;
+            scrollLcd.style.transform = `translate(-${engNextTotalDistance}px, 0%)`;
+          }, 500);
+        }, 500);
+      }, 21850);
+
+      // 30초 후 → 첫 번째 디스플레이로 복귀
+      setTimeout(() => {
+        topLabel.style.display = 'none';
+        scrollLcd.style.display = 'none';
+        centerLine.style.display = 'none';
+        isAnnouncementComplete = true; // 정류소 안내 완료 표시
+        console.log('정류소 안내 완료 - 다음 정류소 안내 준비됨');
+        switchToDisplay1();
+      }, 30000);
+    }
+
+    // 정류소별 안내 함수
+    function startStationAnnouncement(station) {
+      console.log(`${station.name} 정류소 안내 시작`);
+      currentDisplay = 2;
+      
+      // 첫 번째 디스플레이 정지
+      if (display1Interval) {
+        clearTimeout(display1Interval);
+        console.log('첫 번째 디스플레이 타이머 정지됨');
+      }
+      
+      // 모든 첫 번째 디스플레이 요소 숨기기
+      title.style.display = 'none';
+      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      thirdTop.style.display = 'none';
+      thirdBottom.style.display = 'none';
+      fourthTop.style.display = 'none';
+      fourthBottom.style.display = 'none';
+      
+      // 두 번째 디스플레이 요소들 표시
+      topLabel.textContent = '이번 정류소';
+      topLabel.style.display = 'block';
+      scrollLcd.textContent = station.displayText;
+      scrollLcd.style.display = 'block';
+      centerLine.style.display = 'block';
+      updateColors(); // 색상 업데이트
+      
+      // 목동5단지B상가와 목5동주민센터는 가운데 정렬, 나머지는 스크롤
+      if (station.name === '목동5단지B상가' || station.name === '목동5단지C상가') {
+        scrollLcd.style.left = '50%';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateX(-50%) translateY(0%)';
+        scrollLcd.style.transition = 'none';
+      } else {
+        const textWidth = scrollLcd.scrollWidth;
+        const totalDistance = textWidth + containerWidth;
+        const duration = totalDistance / speed;
+
+        scrollLcd.style.left = '0';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateY(0%)';
+        scrollLcd.style.transition = 'none';
+        
+        setTimeout(() => {
+          scrollLcd.style.transition = `transform ${duration}s linear`;
+          scrollLcd.style.transform = `translateX(-${totalDistance}px)`;
+        }, 500);
+      }
+      
+      // 방향에 따른 오디오 재생
+      let audioToPlay = station.audio;
+      
+      // 당산역의 경우 방향에 따라 다른 오디오 재생
+      if (station.name === '당산역') {
+        console.log(`당산역 안내 - 현재 방향: ${currentDirection}`);
+        if (currentDirection === 'up') {
+          audioToPlay = 'dangsanSunAudio'; // 상행: 당산→목동
+          console.log('상행 모드: dangsanSunAudio 선택');
+        } else {
+          audioToPlay = 'dangsanAudio'; // 하행 또는 기본
+          console.log('하행 모드 또는 기본: dangsanAudio 선택');
+        }
+      }
+      
+      console.log(`최종 선택된 오디오: ${audioToPlay}`);
+      playAudioSafely(audioToPlay);
+
+      // 5.38초 후 → 첫 화면 숨기고 → 다음 정류소 표시
+      display2Timeout = setTimeout(() => {
+        scrollLcd.style.display = 'none';
+        topLabel.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = '다음 정류소';
+          topLabel.style.color = currentModel === 'old' ? '#37d85c' : 'lime';
+          topLabel.style.display = 'block';
+
+          // 다음 정류소 텍스트 설정
+          let nextStationText = '';
+          if (station.name === '목동야구장') {
+            nextStationText = '목5동주민센터';
+          } else if (station.name === '목동5단지C상가') {
+            nextStationText = '목동5단지B상가';
+          } else if (station.name === '목동5단지B상가') {
+            nextStationText = '목동6단지상가,이대병원입구';
+          } else if (station.name === '목동6단지상가') {
+            nextStationText = '양평한신아파트, 9호선선유도역';
+          } else if (station.name === '선유도역') {
+            // 방향에 따라 다음 정류장 다르게 설정
+            if (currentDirection === 'up') {
+              nextStationText = '목동1단지상가,이대병원입구'; // 상행: 당산→목동
+            } else {
+              nextStationText = '지하철 2,9호선 당산역'; // 하행: 목동→당산
+            }
+          } else if (station.name === '월촌중학교') {
+            nextStationText = '목동2단지상가';
+          } else if (station.name === '당산역') {
+            nextStationText = '양평한신아파트, 9호선선유도역';
+          }
+          
+          scrollLcd.textContent = nextStationText;
+          scrollLcd.style.display = 'block';
+
+          // 다음 정류소가 목동5단지B상가, 목5동주민센터, 목동야구장인 경우 가운데 정렬
+          if (nextStationText === '목동5단지B상가' || nextStationText === '목5동주민센터' || nextStationText === '목동야구장,행복한세상' || nextStationText === '목동2단지상가') {
+            scrollLcd.style.left = '50%';
+            scrollLcd.style.top = '50%';
+            scrollLcd.style.transform = 'translateX(-50%) translateY(0%)';
+            scrollLcd.style.transition = 'none';
+          } else {
+            scrollLcd.style.left = '0';
+            scrollLcd.style.top = '50%';
+            scrollLcd.style.transform = 'translateY(0%)';
+            scrollLcd.style.transition = 'none';
+            
+            // 다음 정류소 텍스트도 스크롤 애니메이션 적용
+            const nextTextWidth = scrollLcd.scrollWidth;
+            const nextTotalDistance = nextTextWidth + containerWidth;
+            const nextDuration = nextTotalDistance / speed;
+
+            setTimeout(() => {
+              scrollLcd.style.transition = `transform ${nextDuration}s linear`;
+              scrollLcd.style.transform = `translateX(-${nextTotalDistance}px)`;
+            }, 500);
+          }
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+        }, 500);
+      }, 5380);
+
+      // 12초 후 → 영어 안내로 교체
+      setTimeout(() => {
+        topLabel.textContent = 'THIS STOP IS';
+        topLabel.style.display = 'block';
+
+        // 영어 텍스트 설정
+        let engText = '';
+        if (station.name === '목동야구장') {
+          engText = 'Mokdong Baseball Stadium, Happy World';
+        } else if (station.name === '목동5단지C상가') {
+          engText = 'Mok 5dong Office';
+        } else if (station.name === '목동5단지B상가') {
+          engText = 'Mokdong 5 Danji B Store';
+        } else if (station.name === '목동6단지상가') {
+          engText = 'Mokdong 6 Danji Store, Ewha Womans Univ. Mok-dong Hospital';
+        } else if (station.name === '선유도역') {
+          engText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+        } else if (station.name === '월촌중학교') {
+          engText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital';
+        } else if (station.name === '당산역') {
+          engText = 'Line 2,9 Dangsan Station';
+        }
+
+        scrollLcd.textContent = engText;
+        scrollLcd.style.left = '0';
+        scrollLcd.style.top = '50%';
+        scrollLcd.style.transform = 'translateY(0%)';
+        scrollLcd.style.transition = 'none';
+        scrollLcd.style.display = 'block';
+        updateColors(); // 색상 업데이트
+
+        const engTextWidth = scrollLcd.scrollWidth;
+        const engTotalDistance = engTextWidth + containerWidth;
+        const engDuration = engTotalDistance / speed;
+
+        setTimeout(() => {
+          scrollLcd.style.transition = `transform ${engDuration}s linear`;
+          scrollLcd.style.transform = `translate(-${engTotalDistance}px, 0%)`;
+        }, 500);
+      }, 12000);
+
+      // 21.85초 후 → 모두 숨김 (0.5초)
+      setTimeout(() => {
+        topLabel.style.display = 'none';
+        scrollLcd.style.display = 'none';
+        centerLine.style.display = 'none';
+
+        setTimeout(() => {
+          topLabel.textContent = 'NEXT STOP IS';
+          topLabel.style.display = 'block';
+
+          // 영어 다음 정류소 텍스트 설정
+          let engNextText = '';
+          if (station.name === '목동야구장') {
+            engNextText = 'Mok 5dong Office';
+          } else if (station.name === '목동5단지C상가') {
+            engNextText = 'Mokdong 5 Danji B Store';
+          } else if (station.name === '목동5단지B상가') {
+            engNextText = 'Mokdong 6 Danji Store, Ewha Womans Univ. Mok-dong Hospital';
+          } else if (station.name === '목동6단지상가') {
+            engNextText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+          } else if (station.name === '선유도역') {
+            // 방향에 따라 영어 다음 정류소 다르게 설정
+            if (currentDirection === 'up') {
+              engNextText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital'; // 상행: 당산→목동
+            } else {
+              engNextText = 'Line 2,9 Dangsan Station'; // 하행: 목동→당산
+            }
+          } else if (station.name === '월촌중학교') {
+            engNextText = 'Mokdong 2 Danji Stores';
+          } else if (station.name === '당산역') {
+            engNextText = 'Yangpyeong Hanshin Apt. Line 9 Seonyudo Station';
+          }
+
+          scrollLcd.textContent = engNextText;
+          scrollLcd.style.left = '0';
+          scrollLcd.style.top = '50%';
+          scrollLcd.style.transform = 'translateY(0%)';
+          scrollLcd.style.transition = 'none';
+          scrollLcd.style.display = 'block';
+
+          centerLine.style.display = 'block';
+          updateColors(); // 색상 업데이트
+
+          const eng2Width = scrollLcd.scrollWidth;
+          const eng2TotalDistance = eng2Width + containerWidth;
+          const eng2Duration = eng2TotalDistance / speed;
+
+          // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
+          const engNextDelay = engNextText === 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital' ? 3500 : 500;
+          setTimeout(() => {
+            scrollLcd.style.transition = `transform ${eng2Duration}s linear`;
+            scrollLcd.style.transform = `translate(-${eng2TotalDistance}px, 0%)`;
+            // 정류소 안내 완료 후 안내 문구로 자동 전환
+            setTimeout(() => {
+              isAnnouncementComplete = true; // 정류소 안내 완료 표시
+              console.log('정류소 안내 완료 - 다음 정류소 안내 준비됨');
+              switchToDisplay1();
+            }, (eng2Duration + 0.5) * 1000);
+          }, engNextDelay);
+        }, 500);
+      }, 21850);
+      
+      // 버튼 스타일 업데이트
+      display2Btn.classList.add('active');
+      display1Btn.classList.remove('active');
+      
+      // 색상 업데이트
+      updateColors();
+    }
+
+    function switchToDisplay2() {
+      console.log('switchToDisplay2 함수 호출됨');
+      // 기본적으로 선유도역으로 시작 (startDisplay2 함수 사용)
+      startDisplay2();
+      console.log('startDisplay2 함수 호출 완료');
+    }
+
+    // 이벤트 리스너
+    display1Btn.addEventListener('click', switchToDisplay1);
+    display2Btn.addEventListener('click', () => {
+      // 정류소 안내 버튼 클릭 시 사용자 상호작용으로 간주
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('정류소 안내 버튼 클릭으로 사용자 상호작용 감지');
+        if (audio) {
+          audio.load();
+        }
+      }
+      console.log('정류소 안내 버튼 클릭됨 - switchToDisplay2 호출');
+      switchToDisplay2();
+    });
+    
+    // 구형/신형 버튼 이벤트 리스너
+    oldModelBtn.addEventListener('click', () => {
+      currentModel = 'old';
+      oldModelBtn.classList.add('active');
+      newModelBtn.classList.remove('active');
+      updateColors();
+      console.log('구형 모드로 변경');
+    });
+    
+    newModelBtn.addEventListener('click', () => {
+      currentModel = 'new';
+      newModelBtn.classList.add('active');
+      oldModelBtn.classList.remove('active');
+      updateColors();
+      console.log('신형 모드로 변경');
+    });
+    
+    // 오디오 자동 재생을 위한 사용자 상호작용 감지
+    let userInteracted = false;
+    
+    // 안전한 오디오 재생 함수
+    function playAudioSafely(audioId) {
+      console.log(`오디오 재생 시도: ${audioId}, 사용자 상호작용: ${userInteracted}`);
+      
+      if (!userInteracted) {
+        console.log('사용자 상호작용이 없어서 오디오 재생 건너뜀');
+        return;
+      }
+      
+      const audioElement = document.getElementById(audioId);
+      if (!audioElement) {
+        console.log(`오디오 요소를 찾을 수 없음: ${audioId}`);
+        return;
+      }
+      
+      console.log(`${audioId} 오디오 재생 시작`);
+      audioElement.volume = 1.0;
+      audioElement.play().then(() => {
+        console.log(`${audioId} 오디오 재생 성공`);
+      }).catch(error => {
+        console.log(`오디오 재생 실패 (${audioId}):`, error);
+      });
+    }
+    
+    // 페이지 클릭 시 오디오 재생 허용
+    document.addEventListener('click', function() {
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('사용자 상호작용 감지: 오디오 재생 가능');
+        // 모든 오디오를 미리 로드
+        const allAudios = ['announcement', 'dangsanAudio', 'dangsanSunAudio', 'mok6Audio', 'mok5bAudio', 'mok5cAudio', 'mokStadiumAudio'];
+        allAudios.forEach(audioId => {
+          const audioElement = document.getElementById(audioId);
+          if (audioElement) {
+            audioElement.load();
+            console.log(`${audioId} 오디오 로드 완료`);
+          } else {
+            console.log(`${audioId} 오디오 요소를 찾을 수 없음`);
+          }
+        });
+      }
+    }, { once: true });
+
+    // 목표 위치들 (정류소 위치들)
+    const stations = [
+      {
+        name: '목동야구장',
+        lat: 37.525889,
+        lon: 126.875272,
+        audio: 'mokStadiumAudio',
+        displayText: '목동야구장,행복한세상'
+      },
+      {
+        name: '목동5단지C상가',
+        lat: 37.531090,
+        lon: 126.876995,
+        audio: 'mok5cAudio',
+        displayText: '목5동주민센터'
+      },
+      {
+        name: '목동5단지B상가',
+        lat: 37.535277,
+        lon: 126.879630,
+        audio: 'mok5bAudio',
+        displayText: '목동5단지B상가'
+      },
+      {
+        name: '목동6단지상가',
+        lat: 37.536231,
+        lon: 126.882298,
+        audio: 'mok6Audio',
+        displayText: '목동6단지상가,이대병원입구'
+      },
+      {
+        name: '선유도역',
+        lat: 37.539756,
+        lon: 126.887565,
+        audio: 'announcement',
+        displayText: '양평한신아파트, 9호선선유도역'
+      },
+      {
+        name: '월촌중학교',
+        lat: 37.540060,
+        lon: 126.888740,
+        audio: 'wolchonAudio',
+        displayText: '목동1단지상가,이대병원입구'
+      },
+      {
+        name: '당산역',
+        lat: 37.537096,
+        lon: 126.900256,
+        audio: 'dangsanAudio',
+        displayText: '지하철 2,9호선 당산역'
+      }
+    ];
+    const targetRadius = 100; // 100미터 반경
+    
+    // 두 지점 간의 거리 계산 함수 (미터 단위)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // 지구 반지름 (미터)
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    
+    // GPS 위치 추적
+    let gpsWatchId = null;
+    let lastUpdateTime = 0;
+    
+    function startGPS() {
+      console.log('GPS 추적 시작...');
+      
+      // 기존 watchPosition 정지
+      if (gpsWatchId) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+      }
+      
+      gpsWatchId = navigator.geolocation.watchPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const now = Date.now();
+        
+        console.log(`GPS 업데이트: ${lat.toFixed(6)}, ${lon.toFixed(6)} (시간: ${new Date(now).toLocaleTimeString()})`);
+        
+        // 방향 분석
+        const direction = analyzeDirection(lat, lon);
+        if (direction !== 'unknown') {
+          currentDirection = direction;
+          console.log(`방향 분석: ${direction === 'up' ? '상행(당산→목동)' : '하행(목동→당산)'}`);
+        }
+        
+        // 이전 위치 업데이트 (방향 분석 후에 업데이트)
+        previousLat = lat;
+        previousLon = lon;
+        lastUpdateTime = now;
+        
+        // 가장 가까운 정류소 찾기
+        let nearestStation = null;
+        let minDistance = Infinity;
+        
+        stations.forEach(station => {
+          const distance = calculateDistance(lat, lon, station.lat, station.lon);
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestStation = station;
+          }
+        });
+        
+        locationDisplay.textContent = `위치: ${lat.toFixed(6)}, ${lon.toFixed(6)} (가장 가까운 정류소: ${nearestStation.name} ${minDistance.toFixed(0)}m, 방향: ${currentDirection === 'up' ? '상행' : currentDirection === 'down' ? '하행' : '불명'}) [${new Date(now).toLocaleTimeString()}]`;
+        
+        // 디버깅을 위한 로그 추가
+        console.log(`현재 거리: ${minDistance.toFixed(0)}m, 목표 반경: ${targetRadius}m, 현재 디스플레이: ${currentDisplay}, 가장 가까운 정류소: ${nearestStation.name}, 방향: ${currentDirection}`);
+        
+        // 목표 위치 100m 이내에 있고, 현재 안내 문구 모드일 때 자동으로 정류소 안내 시작
+        if (minDistance <= targetRadius && currentDisplay === 1 && isAnnouncementComplete) {
+          console.log(`${nearestStation.name} 근처 도착! (거리: ${minDistance.toFixed(0)}m) 자동으로 정류소 안내 시작`);
+          lastAnnouncedStation = nearestStation.name;
+          isAnnouncementComplete = false;
+          startStationAnnouncement(nearestStation);
+        }
+        
+        // 100m 밖으로 나가면 안내 문구로 돌아가기 (디버깅용)
+        if (minDistance > targetRadius && currentDisplay === 2) {
+          console.log(`정류소에서 멀어짐! (거리: ${minDistance.toFixed(0)}m) 안내 문구로 돌아가기`);
+          // 주의: 이 기능은 테스트용이므로 실제 사용 시에는 주석 처리하세요
+          // switchToDisplay1();
+        }
+      }, err => {
+        console.warn('GPS error:', err);
+        locationDisplay.textContent = `GPS 오류: ${err.message}`;
+      }, { 
+        enableHighAccuracy: true, // 정확도 높임
+        maximumAge: 0, // 항상 새로운 위치 정보 사용
+        timeout: 15000 // 15초 타임아웃
+      });
+    }
+    
+    // 주기적 GPS 업데이트 (백업용)
+    function startPeriodicGPS() {
+      setInterval(() => {
+        const now = Date.now();
+        // 마지막 업데이트로부터 10초가 지났으면 강제 업데이트
+        if (now - lastUpdateTime > 10000) {
+          console.log('10초 이상 업데이트 없음 - 강제 GPS 요청');
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              console.log(`강제 GPS 업데이트: ${lat.toFixed(6)}, ${lon.toFixed(6)} (시간: ${new Date(now).toLocaleTimeString()})`);
+              
+              // 위치 표시 업데이트
+              let nearestStation = null;
+              let minDistance = Infinity;
+              
+              stations.forEach(station => {
+                const distance = calculateDistance(lat, lon, station.lat, station.lon);
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  nearestStation = station;
+                }
+              });
+              
+              locationDisplay.textContent = `위치: ${lat.toFixed(6)}, ${lon.toFixed(6)} (가장 가까운 정류소: ${nearestStation.name} ${minDistance.toFixed(0)}m, 방향: ${currentDirection === 'up' ? '상행' : currentDirection === 'down' ? '하행' : '불명'}) [강제: ${new Date(now).toLocaleTimeString()}]`;
+              
+              // 강제 GPS 업데이트에서도 정류소 안내 로직 추가
+              if (minDistance <= targetRadius && currentDisplay === 1 && isAnnouncementComplete) {
+                console.log(`[강제 GPS] ${nearestStation.name} 근처 도착! (거리: ${minDistance.toFixed(0)}m) 자동으로 정류소 안내 시작`);
+                lastAnnouncedStation = nearestStation.name;
+                isAnnouncementComplete = false;
+                startStationAnnouncement(nearestStation);
+              }
+              
+              lastUpdateTime = now;
+            }, err => {
+              // 타임아웃 오류는 조용히 무시 (너무 자주 로그가 나오지 않도록)
+              if (err.code !== 3) { // 3 = TIMEOUT
+                console.warn('강제 GPS 오류:', err.message);
+              }
+            }, { 
+              enableHighAccuracy: false, // 정확도 요구사항 완화
+              timeout: 10000, // 타임아웃 시간 증가
+              maximumAge: 30000 // 30초 이내의 위치 정보 허용
+            });
+          }
+        }
+      }, 3000); // 3초마다 체크
+    }
+    
+    // GPS 시작
+    startGPS();
+    
+    // 주기적 GPS 업데이트 시작
+    startPeriodicGPS();
+    
+    // GPS 상태 확인 및 수동 위치 설정 기능
+    function checkGPSStatus() {
+      if (!navigator.geolocation) {
+        console.error('이 브라우저는 GPS를 지원하지 않습니다.');
+        locationDisplay.textContent = 'GPS 지원 안됨';
+        return false;
+      }
+      
+      navigator.permissions.query({name: 'geolocation'}).then(result => {
+        console.log('GPS 권한 상태:', result.state);
+        if (result.state === 'denied') {
+          locationDisplay.textContent = 'GPS 권한 거부됨 - 브라우저 설정에서 위치 권한을 허용해주세요';
+        } else if (result.state === 'prompt') {
+          locationDisplay.textContent = 'GPS 권한 요청 중...';
+        } else if (result.state === 'granted') {
+          locationDisplay.textContent = 'GPS 권한 허용됨 - 위치 추적 중...';
+          // 권한이 허용되면 즉시 위치 가져오기 시도
+          getCurrentLocation();
+        }
+      }).catch(err => {
+        console.error('GPS 권한 확인 오류:', err);
+        locationDisplay.textContent = 'GPS 권한 확인 실패';
+      });
+      
+      return true;
+    }
+    
+    // 현재 위치 가져오기 함수
+    function getCurrentLocation() {
+      console.log('현재 위치 가져오기 시도...');
+      locationDisplay.textContent = '위치 가져오는 중...';
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const now = Date.now();
+            console.log(`현재 위치 성공: ${lat}, ${lon}`);
+            
+            // 방향 분석
+            const direction = analyzeDirection(lat, lon);
+            if (direction !== 'unknown') {
+              currentDirection = direction;
+              console.log(`방향 분석: ${direction === 'up' ? '상행(당산→목동)' : '하행(목동→당산)'}`);
+            }
+            
+            // 이전 위치 업데이트
+            previousLat = lat;
+            previousLon = lon;
+            lastUpdateTime = now;
+            
+            // 위치 표시 업데이트
+            let nearestStation = null;
+            let minDistance = Infinity;
+            
+            stations.forEach(station => {
+              const distance = calculateDistance(lat, lon, station.lat, station.lon);
+              if (distance < minDistance) {
+                minDistance = distance;
+                nearestStation = station;
+              }
+            });
+            
+            locationDisplay.textContent = `위치: ${lat.toFixed(6)}, ${lon.toFixed(6)} (가장 가까운 정류소: ${nearestStation.name} ${minDistance.toFixed(0)}m, 방향: ${currentDirection === 'up' ? '상행' : currentDirection === 'down' ? '하행' : '불명'}) [수동: ${new Date(now).toLocaleTimeString()}]`;
+            
+            // 수동 GPS 업데이트에서도 정류소 안내 로직 추가
+            if (minDistance <= targetRadius && currentDisplay === 1 && isAnnouncementComplete) {
+              console.log(`[수동 GPS] ${nearestStation.name} 근처 도착! (거리: ${minDistance.toFixed(0)}m) 자동으로 정류소 안내 시작`);
+              lastAnnouncedStation = nearestStation.name;
+              isAnnouncementComplete = false;
+              startStationAnnouncement(nearestStation);
+            }
+          },
+          err => {
+            console.error('현재 위치 가져오기 실패:', err);
+            locationDisplay.textContent = `GPS 오류: ${err.message} (코드: ${err.code})`;
+          },
+          { 
+            enableHighAccuracy: false, 
+            timeout: 15000,
+            maximumAge: 60000 // 1분 이내의 위치 정보 허용
+          }
+        );
+      } else {
+        locationDisplay.textContent = 'GPS 지원 안됨';
+      }
+    }
+    
+    // GPS 상태 확인
+    checkGPSStatus();
+    
+    // 위치 선택기 함수
+    function showLocationSelector() {
+      // 기존 선택기가 있으면 제거
+      const existingSelector = document.getElementById('locationSelector');
+      if (existingSelector) {
+        existingSelector.remove();
+      }
+      
+      // 위치 선택기 모달 생성
+      const selector = document.createElement('div');
+      selector.id = 'locationSelector';
+      selector.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      `;
+      
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      `;
+      
+      modal.innerHTML = `
+        <h2 style="margin: 0 0 20px 0; color: #333; text-align: center;">📍 위치 수동 설정</h2>
+        <p style="margin: 0 0 20px 0; color: #666; text-align: center;">원하는 정류소를 선택하거나 좌표를 직접 입력하세요</p>
+        
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">🚌 정류소 선택</h3>
+          <select id="stationSelect" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+            <option value="">정류소를 선택하세요</option>
+            <option value="목동야구장">목동야구장</option>
+            <option value="목동5단지C상가">목동5단지C상가 (목5동주민센터)</option>
+            <option value="목동5단지B상가">목동5단지B상가</option>
+            <option value="목동6단지상가">목동6단지상가,이대병원입구</option>
+            <option value="선유도역">선유도역 (양평한신아파트)</option>
+            <option value="월촌중학교">월촌중학교 (목동1단지상가)</option>
+            <option value="당산역">당산역</option>
+          </select>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">📍 좌표 직접 입력</h3>
+          <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="number" id="latInput" placeholder="위도 (예: 37.539756)" step="0.000001" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+            <input type="number" id="lonInput" placeholder="경도 (예: 126.887565)" step="0.000001" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">⬆️ 방향 설정</h3>
+          <div style="display: flex; gap: 10px;">
+            <button id="directionUp" style="flex: 1; padding: 10px; background: #ff6600; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">⬆️ 상행 (당산→목동)</button>
+            <button id="directionDown" style="flex: 1; padding: 10px; background: #0066ff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">⬇️ 하행 (목동→당산)</button>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+          <button id="applyLocation" style="flex: 1; padding: 15px; background: #44aa44; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 적용</button>
+          <button id="cancelLocation" style="flex: 1; padding: 15px; background: #ff4444; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">❌ 취소</button>
+        </div>
+      `;
+      
+      selector.appendChild(modal);
+      document.body.appendChild(selector);
+      
+      // 정류소 선택 시 좌표 자동 입력
+      const stationSelect = document.getElementById('stationSelect');
+      stationSelect.addEventListener('change', function() {
+        const selectedStation = stations.find(s => s.name === this.value);
+        if (selectedStation) {
+          document.getElementById('latInput').value = selectedStation.lat;
+          document.getElementById('lonInput').value = selectedStation.lon;
+        }
+      });
+      
+      // 방향 버튼 이벤트
+      document.getElementById('directionUp').addEventListener('click', function() {
+        currentDirection = 'up';
+        this.style.background = '#ff8800';
+        document.getElementById('directionDown').style.background = '#0066ff';
+      });
+      
+      document.getElementById('directionDown').addEventListener('click', function() {
+        currentDirection = 'down';
+        this.style.background = '#0088ff';
+        document.getElementById('directionUp').style.background = '#ff6600';
+      });
+      
+      // 적용 버튼
+      document.getElementById('applyLocation').addEventListener('click', function() {
+        const lat = parseFloat(document.getElementById('latInput').value);
+        const lon = parseFloat(document.getElementById('lonInput').value);
+        
+        if (isNaN(lat) || isNaN(lon)) {
+          alert('올바른 좌표를 입력해주세요!');
+          return;
+        }
+        
+        // 수동 위치 설정
+        setManualLocation(lat, lon);
+        selector.remove();
+      });
+      
+      // 취소 버튼
+      document.getElementById('cancelLocation').addEventListener('click', function() {
+        selector.remove();
+      });
+      
+      // 모달 외부 클릭 시 닫기
+      selector.addEventListener('click', function(e) {
+        if (e.target === selector) {
+          selector.remove();
+        }
+      });
+    }
+    
+    // 수동 위치 설정 함수
+    function setManualLocation(lat, lon) {
+      const now = Date.now();
+      console.log(`수동 위치 설정: ${lat}, ${lon}`);
+      
+      // 이전 위치 업데이트
+      previousLat = lat;
+      previousLon = lon;
+      lastUpdateTime = now;
+      
+      // 가장 가까운 정류소 찾기
+      let nearestStation = null;
+      let minDistance = Infinity;
+      
+      stations.forEach(station => {
+        const distance = calculateDistance(lat, lon, station.lat, station.lon);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestStation = station;
+        }
+      });
+      
+      locationDisplay.textContent = `위치: ${lat.toFixed(6)}, ${lon.toFixed(6)} (가장 가까운 정류소: ${nearestStation.name} ${minDistance.toFixed(0)}m, 방향: ${currentDirection === 'up' ? '상행' : currentDirection === 'down' ? '하행' : '불명'}) [수동: ${new Date(now).toLocaleTimeString()}]`;
+      
+      // 수동 위치 설정에서도 정류소 안내 로직 추가
+      if (minDistance <= targetRadius && currentDisplay === 1 && isAnnouncementComplete) {
+        console.log(`[수동 위치] ${nearestStation.name} 근처 도착! (거리: ${minDistance.toFixed(0)}m) 자동으로 정류소 안내 시작`);
+        lastAnnouncedStation = nearestStation.name;
+        isAnnouncementComplete = false;
+        startStationAnnouncement(nearestStation);
+      }
+    }
+
+    // 테스트 버튼들 생성
+    const testBtnContainer = document.createElement('div');
+    testBtnContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; max-width: 400px;';
+    
+    // 모바일에서 가로 배치로 변경
+    const mobileStyle = `
+      @media (max-width: 768px) {
+        #testBtnContainer {
+          flex-direction: row !important;
+          flex-wrap: wrap !important;
+          max-width: 90vw !important;
+          gap: 5px !important;
+          top: 10px !important;
+          right: 10px !important;
+        }
+        #testBtnContainer button {
+          font-size: 12px !important;
+          padding: 8px 10px !important;
+          max-width: 120px !important;
+        }
+      }
+    `;
+    
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = mobileStyle;
+    document.head.appendChild(styleSheet);
+    
+    // 목동야구장 테스트 버튼
+    const mokStadiumTestBtn = document.createElement('button');
+    mokStadiumTestBtn.textContent = '🔊 목동야구장 안내 시작';
+    mokStadiumTestBtn.style.cssText = 'padding: 15px 20px; background: #ff8800; color: white; border: 3px solid #cc6600; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    mokStadiumTestBtn.onclick = () => {
+      console.log('목동야구장 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('목동야구장 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        playAudioSafely('mokStadiumAudio');
+      }
+      startStationAnnouncement(stations[0]);
+    };
+    
+    // 목동5단지C상가 테스트 버튼
+    const mok5cTestBtn = document.createElement('button');
+    mok5cTestBtn.textContent = '🔊 목동5단지C상가 안내 시작';
+    mok5cTestBtn.style.cssText = 'padding: 15px 20px; background: #8800ff; color: white; border: 3px solid #6600cc; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    mok5cTestBtn.onclick = () => {
+      console.log('목동5단지C상가 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('목동5단지C상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        playAudioSafely('mok5cAudio');
+      }
+      startStationAnnouncement(stations[1]);
+    };
+    
+    // 목동5단지B상가 테스트 버튼
+    const mok5bTestBtn = document.createElement('button');
+    mok5bTestBtn.textContent = '🔊 목동5단지B상가 안내 시작';
+    mok5bTestBtn.style.cssText = 'padding: 15px 20px; background: #aa44aa; color: white; border: 3px solid #882288; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    mok5bTestBtn.onclick = () => {
+      console.log('목동5단지B상가 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('목동5단지B상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        playAudioSafely('mok5bAudio');
+      }
+      startStationAnnouncement(stations[2]);
+    };
+    
+    // 목동6단지상가 테스트 버튼
+    const mok6TestBtn = document.createElement('button');
+    mok6TestBtn.textContent = '🔊 목동6단지상가 안내 시작';
+    mok6TestBtn.style.cssText = 'padding: 15px 20px; background: #44aa44; color: white; border: 3px solid #228822; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    mok6TestBtn.onclick = () => {
+      console.log('목동6단지상가 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('목동6단지상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        playAudioSafely('mok6Audio');
+      }
+      startStationAnnouncement(stations[3]);
+    };
+    
+    // 선유도역 상행 테스트 버튼
+    const seonyudoUpTestBtn = document.createElement('button');
+    seonyudoUpTestBtn.textContent = '🔊 선유도역 상행 안내';
+    seonyudoUpTestBtn.style.cssText = 'padding: 15px 20px; background: #ff4444; color: white; border: 3px solid #cc0000; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    seonyudoUpTestBtn.onclick = () => {
+      console.log('선유도역 상행 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('선유도역 상행 테스트 버튼 클릭으로 사용자 상호작용 감지');
+      }
+      currentDirection = 'up';
+      startStationAnnouncementWithAudio(stations[4], 'dangsanSunAudio');
+    };
+    
+    // 선유도역 하행 테스트 버튼
+    const seonyudoDownTestBtn = document.createElement('button');
+    seonyudoDownTestBtn.textContent = '🔊 선유도역 하행 안내';
+    seonyudoDownTestBtn.style.cssText = 'padding: 15px 20px; background: #ff6666; color: white; border: 3px solid #cc3333; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    seonyudoDownTestBtn.onclick = () => {
+      console.log('선유도역 하행 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('선유도역 하행 테스트 버튼 클릭으로 사용자 상호작용 감지');
+      }
+      currentDirection = 'down';
+      startStationAnnouncementWithAudio(stations[4], 'announcement');
+    };
+    
+    // 월촌중학교 테스트 버튼
+    const wolchonTestBtn = document.createElement('button');
+    wolchonTestBtn.textContent = '🔊 월촌중학교 안내 시작';
+    wolchonTestBtn.style.cssText = 'padding: 15px 20px; background: #ffaa00; color: white; border: 3px solid #cc8800; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    wolchonTestBtn.onclick = () => {
+      console.log('월촌중학교 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('월촌중학교 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        playAudioSafely('wolchonAudio');
+      }
+      startStationAnnouncement(stations[5]);
+    };
+    
+    // 당산역 테스트 버튼
+    const dangsanTestBtn = document.createElement('button');
+    dangsanTestBtn.textContent = '🔊 당산역 안내 시작';
+    dangsanTestBtn.style.cssText = 'padding: 15px 20px; background: #4444ff; color: white; border: 3px solid #0000cc; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
+    dangsanTestBtn.onclick = () => {
+      console.log('당산역 테스트 버튼 클릭');
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('당산역 테스트 버튼 클릭으로 사용자 상호작용 감지');
+        const dangsanAudio = document.getElementById('dangsanAudio');
+        const dangsanSunAudio = document.getElementById('dangsanSunAudio');
+        if (dangsanAudio) {
+          dangsanAudio.load();
+        }
+        if (dangsanSunAudio) {
+          dangsanSunAudio.load();
+        }
+      }
+      startStationAnnouncement(stations[6]);
+    };
+    
+    // 방향 테스트 버튼들
+    const directionUpBtn = document.createElement('button');
+    directionUpBtn.textContent = '⬆️ 상행 모드 (당산→목동)';
+    directionUpBtn.style.cssText = 'padding: 10px 15px; background: #ff6600; color: white; border: 2px solid #cc5500; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+    directionUpBtn.onclick = () => {
+      currentDirection = 'up';
+      console.log('상행 모드로 설정: 당산→목동');
+      locationDisplay.textContent = locationDisplay.textContent.replace(/방향: [^)]+/, '방향: 상행');
+      
+      // 상행 오디오 미리 로드
+      const dangsanSunAudio = document.getElementById('dangsanSunAudio');
+      if (dangsanSunAudio) {
+        dangsanSunAudio.load();
+        console.log('dangsanSunAudio 로드 완료');
+      } else {
+        console.log('dangsanSunAudio 요소를 찾을 수 없음');
+      }
+    };
+    
+    const directionDownBtn = document.createElement('button');
+    directionDownBtn.textContent = '⬇️ 하행 모드 (목동→당산)';
+    directionDownBtn.style.cssText = 'padding: 10px 15px; background: #0066ff; color: white; border: 2px solid #0055cc; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+    directionDownBtn.onclick = () => {
+      currentDirection = 'down';
+      console.log('하행 모드로 설정: 목동→당산');
+      locationDisplay.textContent = locationDisplay.textContent.replace(/방향: [^)]+/, '방향: 하행');
+    };
+    
+    // 오디오 테스트 버튼
+    const audioTestBtn = document.createElement('button');
+    audioTestBtn.textContent = '🔊 ?';
+    audioTestBtn.style.cssText = 'padding: 10px 15px; background: #ff0066; color: white; border: 2px solid #cc0055; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+    audioTestBtn.onclick = () => {
+      console.log('dangsanSunAudio 테스트 버튼 클릭');
+      playAudioSafely('dangsanSunAudio');
+    };
+    
+    testBtnContainer.appendChild(mokStadiumTestBtn);
+    testBtnContainer.appendChild(mok5cTestBtn);
+    testBtnContainer.appendChild(mok5bTestBtn);
+    testBtnContainer.appendChild(mok6TestBtn);
+    testBtnContainer.appendChild(seonyudoUpTestBtn);
+    testBtnContainer.appendChild(seonyudoDownTestBtn);
+    testBtnContainer.appendChild(wolchonTestBtn);
+    testBtnContainer.appendChild(dangsanTestBtn);
+    testBtnContainer.appendChild(directionUpBtn);
+    testBtnContainer.appendChild(directionDownBtn);
+    testBtnContainer.appendChild(audioTestBtn);
+    
+    // GPS 수동 설정 버튼들 추가
+    const gpsManualBtn = document.createElement('button');
+    gpsManualBtn.textContent = '📍 GPS 수동 설정';
+    gpsManualBtn.style.cssText = 'padding: 10px 15px; background: #ff8800; color: white; border: 2px solid #cc6600; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+    gpsManualBtn.onclick = () => {
+      console.log('GPS 수동 설정 버튼 클릭');
+      showLocationSelector();
+    };
+    
+    const gpsStatusBtn = document.createElement('button');
+    gpsStatusBtn.textContent = '🔍 GPS 상태 확인';
+    gpsStatusBtn.style.cssText = 'padding: 10px 15px; background: #0088ff; color: white; border: 2px solid #0066cc; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);';
+    gpsStatusBtn.onclick = () => {
+      console.log('GPS 상태 확인 버튼 클릭');
+      checkGPSStatus();
+    };
+    
+    testBtnContainer.appendChild(gpsManualBtn);
+    testBtnContainer.appendChild(gpsStatusBtn);
+    testBtnContainer.id = 'testBtnContainer'; // ID 추가
+    document.body.appendChild(testBtnContainer);
+    
+    // 추가로 오디오 활성화 버튼도 표시
+    const audioBtn = document.createElement('button');
+    audioBtn.id = 'audioBtn';
+    audioBtn.textContent = '🔊 오디오 활성화';
+    audioBtn.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 1000; padding: 10px 15px; background: #44aa44; color: white; border: 2px solid #228822; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;';
+    audioBtn.onclick = () => {
+      if (!userInteracted) {
+        userInteracted = true;
+        console.log('오디오 활성화 버튼 클릭으로 사용자 상호작용 감지');
+        // 모든 오디오를 미리 로드
+        const allAudios = ['announcement', 'dangsanAudio', 'dangsanSunAudio', 'mok6Audio', 'mok5bAudio', 'mok5cAudio', 'mokStadiumAudio'];
+        allAudios.forEach(audioId => {
+          const audioElement = document.getElementById(audioId);
+          if (audioElement) {
+            audioElement.load();
+          }
+        });
+        audioBtn.textContent = '✅ 오디오 활성화됨';
+        audioBtn.style.background = '#228822';
+        setTimeout(() => {
+          audioBtn.style.display = 'none';
+        }, 2000);
+      }
+    };
+    document.body.appendChild(audioBtn);
+
+    // 격자 생성
+    const gridOverlay = document.getElementById('grid-overlay');
+    for (let i = 0; i < 128 * 32; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      gridOverlay.appendChild(cell);
+    }
+
+    // 초기 색상 적용
+    updateColors();
+    
+    // 초기 디스플레이 시작
+    switchToDisplay1();
+  </script>
+</body>
+</html> 
