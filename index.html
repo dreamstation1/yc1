@@ -4,18 +4,22 @@
   <meta charset="UTF-8">
   <title>버스 안내 전광판 (통합)</title>
   <style>
-    /* 폰트 로딩 - GitHub에 HTML 파일과 같은 위치에 HY견고딕.ttf 파일을 올리면 됩니다 */
+    /* 폰트 로딩 - 폰트 파일이 있으면 주석을 해제하세요 */
+    /* 
     @font-face {
       font-family: 'HY견고딕';
-      src: url('./HY견고딕.ttf') format('truetype');
+      src: url('./HY견고딕.ttf') format('truetype'),
+           url('HY견고딕.ttf') format('truetype'),
+           url('./fonts/HY견고딕.ttf') format('truetype');
       font-display: swap;
       font-weight: normal;
       font-style: normal;
     }
+    */
     
-    /* 폰트 로딩 실패 시 대체 폰트 */
+    /* 폰트 로딩 실패 시 대체 폰트 사용 */
     .font-fallback {
-      font-family: 'HY견고딕', 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
+      font-family: 'Malgun Gothic', '맑은 고딕', 'Arial', sans-serif;
     }
     body {
       display: flex;
@@ -1672,7 +1676,7 @@
 
     // 테스트 버튼들 생성
     const testBtnContainer = document.createElement('div');
-    testBtnContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; max-width: 400px;';
+    testBtnContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; max-width: 400px;';
     
     // 모바일에서 가로 배치로 변경
     const mobileStyle = `
@@ -1682,13 +1686,25 @@
           flex-wrap: wrap !important;
           max-width: 90vw !important;
           gap: 5px !important;
-          top: 10px !important;
+          top: 60px !important;
           right: 10px !important;
         }
         #testBtnContainer button {
           font-size: 12px !important;
           padding: 8px 10px !important;
           max-width: 120px !important;
+        }
+        #toggleBtn {
+          top: 10px !important;
+          right: 10px !important;
+          padding: 12px 16px !important;
+          font-size: 18px !important;
+        }
+        #audioBtn {
+          top: 60px !important;
+          right: 10px !important;
+          font-size: 12px !important;
+          padding: 8px 12px !important;
         }
       }
     `;
@@ -1887,11 +1903,33 @@
     testBtnContainer.id = 'testBtnContainer'; // ID 추가
     document.body.appendChild(testBtnContainer);
     
+    // 토글 버튼 생성 (화살표 버튼)
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = '▶';
+    toggleBtn.id = 'toggleBtn';
+    toggleBtn.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1001; padding: 15px 20px; background: #333; color: white; border: 3px solid #555; border-radius: 10px; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.3s;';
+    
+    let isMenuOpen = false;
+    toggleBtn.onclick = () => {
+      isMenuOpen = !isMenuOpen;
+      if (isMenuOpen) {
+        testBtnContainer.style.display = 'flex';
+        toggleBtn.textContent = '◀';
+        toggleBtn.style.transform = 'rotate(0deg)';
+      } else {
+        testBtnContainer.style.display = 'none';
+        toggleBtn.textContent = '▶';
+        toggleBtn.style.transform = 'rotate(0deg)';
+      }
+    };
+    
+    document.body.appendChild(toggleBtn);
+    
     // 추가로 오디오 활성화 버튼도 표시
     const audioBtn = document.createElement('button');
     audioBtn.id = 'audioBtn';
     audioBtn.textContent = '🔊 오디오 활성화';
-    audioBtn.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 1000; padding: 10px 15px; background: #44aa44; color: white; border: 2px solid #228822; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;';
+    audioBtn.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 1001; padding: 10px 15px; background: #44aa44; color: white; border: 2px solid #228822; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;';
     audioBtn.onclick = () => {
       if (!userInteracted) {
         userInteracted = true;
