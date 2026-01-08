@@ -4,14 +4,16 @@
   <meta charset="UTF-8">
   <title>버스 안내 전광판 (통합)</title>
   <style>
-    /* 폰트 로딩 실패 시 대체 폰트만 사용 */
-    /* @font-face {
+    /* 폰트 로딩 - GitHub에 폰트 파일을 fonts/ 폴더에 업로드하면 작동합니다 */
+    @font-face {
       font-family: 'HY견고딕';
-      src: url('HY견고딕.ttf') format('truetype');
+      src: url('./fonts/HY견고딕.woff2') format('woff2'),
+           url('./fonts/HY견고딕.woff') format('woff'),
+           url('./fonts/HY견고딕.ttf') format('truetype');
       font-display: swap;
       font-weight: normal;
       font-style: normal;
-    } */
+    }
     
     /* 폰트 로딩 실패 시 대체 폰트 */
     .font-fallback {
