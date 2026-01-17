@@ -979,17 +979,34 @@
     // 정류소별 안내 함수 (지정된 오디오로)
     function startStationAnnouncementWithAudio(station, audioId) {
       console.log(`${station.name} 정류소 안내 시작 (지정 오디오: ${audioId})`);
-      currentDisplay = 2;
       
-      // 첫 번째 디스플레이 정지
+      // 사용자 상호작용 설정 (오디오 재생을 위해 필수)
+      userInteracted = true;
+      
+      // 이전 타이머 정리
       if (display1Interval) {
         clearTimeout(display1Interval);
+        display1Interval = null;
         console.log('첫 번째 디스플레이 타이머 정지됨');
       }
+      if (display2Timeout) {
+        clearTimeout(display2Timeout);
+        display2Timeout = null;
+        console.log('두 번째 디스플레이 타이머 정지됨');
+      }
+      
+      currentDisplay = 2;
       
       // 모든 첫 번째 디스플레이 요소 숨기기
       title.style.display = 'none';
-      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      scrollTexts.forEach(item => {
+        const elem = document.getElementById(item.id);
+        if (elem) elem.style.display = 'none';
+      });
+      const scrollText9 = document.getElementById('scroll-text-9');
+      if (scrollText9) scrollText9.style.display = 'none';
+      const scrollText10 = document.getElementById('scroll-text-10');
+      if (scrollText10) scrollText10.style.display = 'none';
       thirdTop.style.display = 'none';
       thirdBottom.style.display = 'none';
       fourthTop.style.display = 'none';
@@ -1025,9 +1042,22 @@
         }, 500);
       }
       
-      // 지정된 오디오 재생
+      // 지정된 오디오 재생 (즉시 재생)
       console.log(`지정된 오디오 재생: ${audioId}`);
-      playAudioSafely(audioId);
+      const audioElement = document.getElementById(audioId);
+      if (audioElement) {
+        console.log(`${audioId} 오디오 요소 찾음, 재생 시도`);
+        audioElement.volume = 1.0;
+        audioElement.currentTime = 0; // 처음부터 재생
+        audioElement.play().then(() => {
+          console.log(`${audioId} 오디오 재생 성공`);
+        }).catch(error => {
+          console.error(`오디오 재생 실패 (${audioId}):`, error);
+          // 재생 실패해도 계속 진행
+        });
+      } else {
+        console.error(`오디오 요소를 찾을 수 없음: ${audioId}`);
+      }
 
       // 5.38초 후 → 첫 화면 숨기고 → 다음 정류소 표시
       display2Timeout = setTimeout(() => {
@@ -1203,17 +1233,34 @@
     // 정류소별 안내 함수
     function startStationAnnouncement(station) {
       console.log(`${station.name} 정류소 안내 시작`);
-      currentDisplay = 2;
       
-      // 첫 번째 디스플레이 정지
+      // 사용자 상호작용 설정 (오디오 재생을 위해 필수)
+      userInteracted = true;
+      
+      // 이전 타이머 정리
       if (display1Interval) {
         clearTimeout(display1Interval);
+        display1Interval = null;
         console.log('첫 번째 디스플레이 타이머 정지됨');
       }
+      if (display2Timeout) {
+        clearTimeout(display2Timeout);
+        display2Timeout = null;
+        console.log('두 번째 디스플레이 타이머 정지됨');
+      }
+      
+      currentDisplay = 2;
       
       // 모든 첫 번째 디스플레이 요소 숨기기
       title.style.display = 'none';
-      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      scrollTexts.forEach(item => {
+        const elem = document.getElementById(item.id);
+        if (elem) elem.style.display = 'none';
+      });
+      const scrollText9 = document.getElementById('scroll-text-9');
+      if (scrollText9) scrollText9.style.display = 'none';
+      const scrollText10 = document.getElementById('scroll-text-10');
+      if (scrollText10) scrollText10.style.display = 'none';
       thirdTop.style.display = 'none';
       thirdBottom.style.display = 'none';
       fourthTop.style.display = 'none';
@@ -1265,7 +1312,22 @@
       }
       
       console.log(`최종 선택된 오디오: ${audioToPlay}`);
-      playAudioSafely(audioToPlay);
+      
+      // 오디오 재생 (즉시 재생)
+      const audioElement = document.getElementById(audioToPlay);
+      if (audioElement) {
+        console.log(`${audioToPlay} 오디오 요소 찾음, 재생 시도`);
+        audioElement.volume = 1.0;
+        audioElement.currentTime = 0; // 처음부터 재생
+        audioElement.play().then(() => {
+          console.log(`${audioToPlay} 오디오 재생 성공`);
+        }).catch(error => {
+          console.error(`오디오 재생 실패 (${audioToPlay}):`, error);
+          // 재생 실패해도 계속 진행
+        });
+      } else {
+        console.error(`오디오 요소를 찾을 수 없음: ${audioToPlay}`);
+      }
 
       // 5.38초 후 → 첫 화면 숨기고 → 다음 정류소 표시
       display2Timeout = setTimeout(() => {
@@ -2028,11 +2090,8 @@
     mokStadiumTestBtn.style.cssText = 'padding: 15px 20px; background: #ff8800; color: white; border: 3px solid #cc6600; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     mokStadiumTestBtn.onclick = () => {
       console.log('목동야구장 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('목동야구장 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        playAudioSafely('mokStadiumAudio');
-      }
+      userInteracted = true;
+      console.log('목동야구장 테스트 버튼 클릭으로 사용자 상호작용 감지');
       startStationAnnouncement(stations[0]);
     };
     
@@ -2042,11 +2101,8 @@
     mok5cTestBtn.style.cssText = 'padding: 15px 20px; background: #8800ff; color: white; border: 3px solid #6600cc; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     mok5cTestBtn.onclick = () => {
       console.log('목동5단지C상가 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('목동5단지C상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        playAudioSafely('mok5cAudio');
-      }
+      userInteracted = true;
+      console.log('목동5단지C상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
       startStationAnnouncement(stations[1]);
     };
     
@@ -2056,11 +2112,8 @@
     mok5bTestBtn.style.cssText = 'padding: 15px 20px; background: #aa44aa; color: white; border: 3px solid #882288; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     mok5bTestBtn.onclick = () => {
       console.log('목동5단지B상가 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('목동5단지B상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        playAudioSafely('mok5bAudio');
-      }
+      userInteracted = true;
+      console.log('목동5단지B상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
       startStationAnnouncement(stations[2]);
     };
     
@@ -2070,11 +2123,8 @@
     mok6TestBtn.style.cssText = 'padding: 15px 20px; background: #44aa44; color: white; border: 3px solid #228822; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     mok6TestBtn.onclick = () => {
       console.log('목동6단지상가 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('목동6단지상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        playAudioSafely('mok6Audio');
-      }
+      userInteracted = true;
+      console.log('목동6단지상가 테스트 버튼 클릭으로 사용자 상호작용 감지');
       startStationAnnouncement(stations[3]);
     };
     
@@ -2084,10 +2134,8 @@
     seonyudoUpTestBtn.style.cssText = 'padding: 15px 20px; background: #ff4444; color: white; border: 3px solid #cc0000; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     seonyudoUpTestBtn.onclick = () => {
       console.log('선유도역 상행 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('선유도역 상행 테스트 버튼 클릭으로 사용자 상호작용 감지');
-      }
+      userInteracted = true;
+      console.log('선유도역 상행 테스트 버튼 클릭으로 사용자 상호작용 감지');
       currentDirection = 'up';
       startStationAnnouncementWithAudio(stations[4], 'dangsanSunAudio');
     };
@@ -2098,10 +2146,8 @@
     seonyudoDownTestBtn.style.cssText = 'padding: 15px 20px; background: #ff6666; color: white; border: 3px solid #cc3333; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     seonyudoDownTestBtn.onclick = () => {
       console.log('선유도역 하행 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('선유도역 하행 테스트 버튼 클릭으로 사용자 상호작용 감지');
-      }
+      userInteracted = true;
+      console.log('선유도역 하행 테스트 버튼 클릭으로 사용자 상호작용 감지');
       currentDirection = 'down';
       startStationAnnouncementWithAudio(stations[4], 'announcement');
     };
@@ -2112,11 +2158,8 @@
     wolchonTestBtn.style.cssText = 'padding: 15px 20px; background: #ffaa00; color: white; border: 3px solid #cc8800; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     wolchonTestBtn.onclick = () => {
       console.log('월촌중학교 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('월촌중학교 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        playAudioSafely('wolchonAudio');
-      }
+      userInteracted = true;
+      console.log('월촌중학교 테스트 버튼 클릭으로 사용자 상호작용 감지');
       startStationAnnouncement(stations[5]);
     };
     
@@ -2126,17 +2169,15 @@
     dangsanTestBtn.style.cssText = 'padding: 15px 20px; background: #4444ff; color: white; border: 3px solid #0000cc; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
     dangsanTestBtn.onclick = () => {
       console.log('당산역 테스트 버튼 클릭');
-      if (!userInteracted) {
-        userInteracted = true;
-        console.log('당산역 테스트 버튼 클릭으로 사용자 상호작용 감지');
-        const dangsanAudio = document.getElementById('dangsanAudio');
-        const dangsanSunAudio = document.getElementById('dangsanSunAudio');
-        if (dangsanAudio) {
-          dangsanAudio.load();
-        }
-        if (dangsanSunAudio) {
-          dangsanSunAudio.load();
-        }
+      userInteracted = true;
+      console.log('당산역 테스트 버튼 클릭으로 사용자 상호작용 감지');
+      const dangsanAudio = document.getElementById('dangsanAudio');
+      const dangsanSunAudio = document.getElementById('dangsanSunAudio');
+      if (dangsanAudio) {
+        dangsanAudio.load();
+      }
+      if (dangsanSunAudio) {
+        dangsanSunAudio.load();
       }
       startStationAnnouncement(stations[6]);
     };
