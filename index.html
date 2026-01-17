@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>버스 안내 전광판 (통합)</title>
   <style>
     /* 폰트 로딩 - GitHub에 HY견고딕.TTF 파일이 있으면 작동합니다 */
@@ -37,6 +38,29 @@
       background-color: rgb(33, 33, 33);
       border: 20px solid rgb(20, 20, 20);
       overflow: hidden;
+    }
+    
+    /* 모바일 반응형 스타일 */
+    @media (max-width: 768px) {
+      .square {
+        width: calc(100vw - 40px);
+        max-width: 1280px;
+        height: calc((100vw - 40px) * 0.25);
+        max-height: 320px;
+        border-width: 10px;
+      }
+      body {
+        padding: 10px;
+        gap: 10px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .square {
+        width: calc(100vw - 20px);
+        height: calc((100vw - 20px) * 0.25);
+        border-width: 8px;
+      }
     }
     .grid-overlay {
       position: absolute;
@@ -364,7 +388,13 @@
     const fourthTop = document.getElementById('fourth-top');
     const fourthBottom = document.getElementById('fourth-bottom');
     const locationDisplay = document.getElementById('locationDisplay');
-    const containerWidth = 1280;
+    const square = document.querySelector('.square');
+    
+    // containerWidth를 동적으로 계산하는 함수
+    function getContainerWidth() {
+      return square ? square.offsetWidth : 1280;
+    }
+    
     const speed = 400;
     let lastIndex = 0;
     let currentSpeed = 31.4;
@@ -511,7 +541,7 @@
       elem.style.display = 'block';
       updateColors(); // 색상 업데이트
       const width = elem.scrollWidth;
-      const totalDistance = width + containerWidth;
+      const totalDistance = width + getContainerWidth();
       const duration = totalDistance / speed;
       elem.style.transform = `translateX(0)`;
       elem.style.transition = 'none';
@@ -552,7 +582,7 @@
       display1Btn.classList.remove('active');
 
       const textWidth = scrollLcd.scrollWidth;
-      const totalDistance = textWidth + containerWidth;
+      const totalDistance = textWidth + getContainerWidth();
       const duration = totalDistance / speed;
 
       scrollLcd.style.transform = 'translateX(0)';
@@ -602,7 +632,7 @@
         updateColors(); // 색상 업데이트
 
         const engTextWidth = scrollLcd.scrollWidth;
-        const engTotalDistance = engTextWidth + containerWidth;
+        const engTotalDistance = engTextWidth + getContainerWidth();
         const engDuration = engTotalDistance / speed;
 
         setTimeout(() => {
@@ -632,7 +662,7 @@
           updateColors(); // 색상 업데이트
 
           const eng2Width = scrollLcd.scrollWidth;
-          const eng2TotalDistance = eng2Width + containerWidth;
+          const eng2TotalDistance = eng2Width + getContainerWidth();
           const eng2Duration = eng2TotalDistance / speed;
 
           // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
@@ -706,7 +736,7 @@
         scrollLcd.style.transition = 'none';
       } else {
         const textWidth = scrollLcd.scrollWidth;
-        const totalDistance = textWidth + containerWidth;
+        const totalDistance = textWidth + getContainerWidth();
         const duration = totalDistance / speed;
 
         scrollLcd.style.left = '0';
@@ -775,7 +805,7 @@
             
             // 다음 정류소 텍스트도 스크롤 애니메이션 적용
             const nextTextWidth = scrollLcd.scrollWidth;
-            const nextTotalDistance = nextTextWidth + containerWidth;
+            const nextTotalDistance = nextTextWidth + getContainerWidth();
             const nextDuration = nextTotalDistance / speed;
 
             setTimeout(() => {
@@ -821,7 +851,7 @@
         updateColors(); // 색상 업데이트
 
         const engTextWidth = scrollLcd.scrollWidth;
-        const engTotalDistance = engTextWidth + containerWidth;
+        const engTotalDistance = engTextWidth + getContainerWidth();
         const engDuration = engTotalDistance / speed;
 
         setTimeout(() => {
@@ -874,7 +904,7 @@
           updateColors(); // 색상 업데이트
 
           const engNextTextWidth = scrollLcd.scrollWidth;
-          const engNextTotalDistance = engNextTextWidth + containerWidth;
+          const engNextTotalDistance = engNextTextWidth + getContainerWidth();
           const engNextDuration = engNextTotalDistance / speed;
 
           setTimeout(() => {
@@ -930,7 +960,7 @@
         scrollLcd.style.transition = 'none';
       } else {
         const textWidth = scrollLcd.scrollWidth;
-        const totalDistance = textWidth + containerWidth;
+        const totalDistance = textWidth + getContainerWidth();
         const duration = totalDistance / speed;
 
         scrollLcd.style.left = '0';
@@ -1013,7 +1043,7 @@
             
             // 다음 정류소 텍스트도 스크롤 애니메이션 적용
             const nextTextWidth = scrollLcd.scrollWidth;
-            const nextTotalDistance = nextTextWidth + containerWidth;
+            const nextTotalDistance = nextTextWidth + getContainerWidth();
             const nextDuration = nextTotalDistance / speed;
 
             setTimeout(() => {
@@ -1059,7 +1089,7 @@
         updateColors(); // 색상 업데이트
 
         const engTextWidth = scrollLcd.scrollWidth;
-        const engTotalDistance = engTextWidth + containerWidth;
+        const engTotalDistance = engTextWidth + getContainerWidth();
         const engDuration = engTotalDistance / speed;
 
         setTimeout(() => {
@@ -1112,7 +1142,7 @@
           updateColors(); // 색상 업데이트
 
           const eng2Width = scrollLcd.scrollWidth;
-          const eng2TotalDistance = eng2Width + containerWidth;
+          const eng2TotalDistance = eng2Width + getContainerWidth();
           const eng2Duration = eng2TotalDistance / speed;
 
           // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
