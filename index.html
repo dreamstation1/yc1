@@ -123,7 +123,7 @@
     }
     .yellow { color: yellow; }
     .orange { color: orange; }
-    .red { color: red; }
+    .red { color: #E90000; }
     .green { color: lime; }
     .third-top, .third-bottom, .fourth-top, .fourth-bottom {
       position: absolute;
@@ -134,6 +134,10 @@
       z-index: 1;
       display: none;
       white-space: nowrap;
+    }
+    #scroll-text-9 {
+      font-size: 130px;
+      top: 10px;
     }
     
     /* 모바일에서만 굵게 표시 */
@@ -275,9 +279,11 @@
       border-color: #999;
     }
     .model-btn.active {
-      background-color: #37d85c;
-      border-color: #17b63c;
+      background-color: #6583e7;
+      border-color: #6583e7;
     }
+    
+    /* 신형 전광판 빛나는 효과 (정적) */
   </style>
 </head>
 <body>
@@ -313,6 +319,12 @@
     </div>
     <div class="scroll-text" id="scroll-text-8">
       <span class="orange">사람이 보이면 </span><span class="red"> 일단,멈춤!  "</span><span class="orange">한순간의 무단횡단,</span><span class="red">교통사고도 </span><span class="green">한순간입니다.</span>
+    </div>
+    <div class="third-top" id="scroll-text-9">
+      <span class="orange">목동운수</span>
+    </div>
+    <div class="scroll-text" id="scroll-text-10">
+      <span class="green">승객 여러분 안녕하세요. 오늘도 저희  </span><span class="orange">목동운수 마을버스 </span><span class="green">를 이용해 주셔서 대단히 감사합니다. </span><span class="orange">목적지까지 </span><span class="red">편안하고 안전하게 </span><span class="green">모시겠습니다. </span><span class="orange">행복한 하루 </span><span class="green">되세요.</span>
     </div>
 
     <div class="third-top" id="third-top">
@@ -372,14 +384,15 @@
     
     // 첫 번째 디스플레이 관련 변수들
     const scrollTexts = [
-      { id: 'scroll-text-1', duration: 24370 },
-      { id: 'scroll-text-2', duration: 10000 },
-      { id: 'scroll-text-3', duration: 17000 },
-      { id: 'scroll-text-4', duration: 15000 },
-      { id: 'scroll-text-5', duration: 13000 },
+      { id: 'scroll-text-1', duration: 20370 },
+      { id: 'scroll-text-2', duration: 8400 },
+      { id: 'scroll-text-3', duration: 13000 },
+      { id: 'scroll-text-4', duration: 12000 },
+      { id: 'scroll-text-5', duration: 10000 },
       { id: 'scroll-text-6', duration: 15000 },
       { id: 'scroll-text-7', duration: 11000 },
-      { id: 'scroll-text-8', duration: 13000 }
+      { id: 'scroll-text-8', duration: 10500 },
+      { id: 'scroll-text-9', duration: 23000 }
     ];
 
     const title = document.getElementById('title');
@@ -458,24 +471,30 @@
       if (currentModel === 'old') {
         // 구형: 노란색 → 주황색, 주황색 → 주황색 유지, 초록색 → 진한 초록색
         yellowElements.forEach(el => {
-          el.style.color = 'orange';
+          el.style.color = '#FA9F16';
+          el.style.textShadow = '';
         });
         orangeElements.forEach(el => {
           el.style.color = 'orange';
+          el.style.textShadow = '';
         });
         greenElements.forEach(el => {
-          el.style.color = '#37d85c'; // 밝은 초록색
+          el.style.color = '#BEE100'; // 밝은 초록색
+          el.style.textShadow = '';
         });
       } else {
-        // 신형: 노란색 → 노란색 유지, 주황색 → 노란색, 초록색 → 밝은 초록색
+        // 신형: 노란색 → 노란색 유지, 주황색 → 노란색, 초록색 → 밝은 초록색 + 빛나는 효과
         yellowElements.forEach(el => {
           el.style.color = 'yellow';
+          el.style.textShadow = '0 0 8px rgba(255, 255, 0, 0.6), 0 0 15px rgba(255, 255, 0, 0.4), 0 0 25px rgba(255, 255, 0, 0.3)';
         });
         orangeElements.forEach(el => { 
           el.style.color = 'yellow';
+          el.style.textShadow = '0 0 8px rgba(255, 255, 0, 0.6), 0 0 15px rgba(255, 255, 0, 0.4), 0 0 25px rgba(255, 255, 0, 0.3)';
         });
         greenElements.forEach(el => {
           el.style.color = 'lime';
+          el.style.textShadow = '0 0 8px rgba(0, 255, 0, 0.6), 0 0 15px rgba(0, 255, 0, 0.4), 0 0 25px rgba(0, 255, 0, 0.3)';
         });
       }
       
@@ -484,47 +503,87 @@
         if (currentModel === 'old') {
           // 구형: 모든 노란색 → 주황색, 모든 초록색 → 밝은 초록색
           scrollLcd.style.color = 'orange';
+          scrollLcd.style.textShadow = '';
           topLabel.style.color = '#37d85c';
+          topLabel.style.textShadow = '';
         } else {
-          // 신형: 모든 주황색 → 노란색, 모든 초록색 → 밝은 초록색
+          // 신형: 모든 주황색 → 노란색, 모든 초록색 → 밝은 초록색 + 빛나는 효과
           scrollLcd.style.color = 'yellow';
+          scrollLcd.style.textShadow = '0 0 8px rgba(255, 255, 0, 0.6), 0 0 15px rgba(255, 255, 0, 0.4), 0 0 25px rgba(255, 255, 0, 0.3)';
           topLabel.style.color = 'lime';
+          topLabel.style.textShadow = '0 0 8px rgba(0, 255, 0, 0.6), 0 0 15px rgba(0, 255, 0, 0.4), 0 0 25px rgba(0, 255, 0, 0.3)';
         }
       }
       
       // "알림" 제목 색상도 업데이트
       if (currentModel === 'old') {
         title.style.color = 'orange'; // 구형: 노란색 → 주황색
+        title.style.textShadow = '';
       } else {
-        title.style.color = 'yellow'; // 신형: 원래 노란색
+        title.style.color = 'yellow'; // 신형: 원래 노란색 + 빛나는 효과
+        title.style.textShadow = '0 0 8px rgba(255, 255, 0, 0.6), 0 0 15px rgba(255, 255, 0, 0.4), 0 0 25px rgba(255, 255, 0, 0.3)';
+      }
+      
+      // 빨간색 요소에도 빛나는 효과 추가 (신형일 때만)
+      const redElements = document.querySelectorAll('.red');
+      if (currentModel === 'new') {
+        redElements.forEach(el => {
+          el.style.textShadow = '0 0 8px rgba(233, 0, 0, 0.6), 0 0 15px rgba(233, 0, 0, 0.4), 0 0 25px rgba(233, 0, 0, 0.3)';
+        });
+      } else {
+        redElements.forEach(el => {
+          el.style.textShadow = '';
+        });
       }
     }
     
     // 첫 번째 디스플레이 함수들
     function randomNext() {
       if (inTarget || currentDisplay !== 1) return;
-      let next;
-      do { next = Math.floor(Math.random() * 8) + 1; } while (next === lastIndex);
-      lastIndex = next;
-      showMessage(next);
+      
+      // 화면 끄기 (0.5초)
+      scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      document.getElementById('scroll-text-9').style.display = 'none';
+      document.getElementById('scroll-text-10').style.display = 'none';
+      thirdTop.style.display = 'none';
+      thirdBottom.style.display = 'none';
+      fourthTop.style.display = 'none';
+      fourthBottom.style.display = 'none';
+      title.style.display = 'none';
+      
+      // 0.5초 후 다음 메시지 표시
+      setTimeout(() => {
+        let next;
+        do { next = Math.floor(Math.random() * 9) + 1; } while (next === lastIndex);
+        lastIndex = next;
+        showMessage(next);
+      }, 500);
     }
 
     function showMessage(index) {
       if (currentDisplay !== 1) return;
       
       scrollTexts.forEach(item => document.getElementById(item.id).style.display = 'none');
+      // 목동운수 안내문도 숨기기
+      document.getElementById('scroll-text-9').style.display = 'none';
+      document.getElementById('scroll-text-10').style.display = 'none';
       thirdTop.style.display = 'none';
       thirdBottom.style.display = 'none';
       fourthTop.style.display = 'none';
       fourthBottom.style.display = 'none';
       title.style.display = 'flex';
+      
+      // 제목 기본값으로 복원
+      title.innerHTML = '<span>알</span><span>림</span>';
 
       if (index === 6) {
         title.style.display = 'none';
         thirdTop.style.display = 'block';
         thirdBottom.style.display = 'block';
         updateColors(); // 색상 업데이트
-        display1Interval = setTimeout(randomNext, 5000);
+        display1Interval = setTimeout(() => {
+          randomNext();
+        }, 5000);
         return;
       }
 
@@ -533,7 +592,46 @@
         thirdTop.style.display = 'block';
         thirdBottom.style.display = 'block';
         updateColors(); // 색상 업데이트
-        display1Interval = setTimeout(randomNext, 5000);
+        display1Interval = setTimeout(() => {
+          randomNext();
+        }, 5000);
+        return;
+      }
+
+      if (index === 9) {
+        // 제목 숨기기 (윗줄에 목동운수가 표시되므로)
+        title.style.display = 'none';
+        
+        // 윗줄: 목동운수 (고정, 가운데 정렬, 주황색)
+        const topElem = document.getElementById('scroll-text-9');
+        topElem.style.display = 'block';
+        
+        // 밑줄: 긴 문구 (스크롤)
+        const bottomElem = document.getElementById('scroll-text-10');
+        bottomElem.style.display = 'block';
+        bottomElem.style.position = 'absolute';
+        bottomElem.style.left = '0';
+        bottomElem.style.top = 'auto';
+        bottomElem.style.bottom = '20px';
+        bottomElem.style.transform = 'translateX(0)';
+        bottomElem.style.transition = 'none';
+        
+        updateColors(); // 색상 업데이트
+        
+        // 밑줄 스크롤 애니메이션
+        const width = bottomElem.scrollWidth;
+        const totalDistance = width + getContainerWidth();
+        const duration = totalDistance / speed;
+        
+        setTimeout(() => {
+          bottomElem.style.transition = `transform ${duration}s linear`;
+          bottomElem.style.transform = `translateX(-${totalDistance}px)`;
+        }, 500);
+
+        // 메시지 표시 시간 후 화면 끄고 다음 메시지로 전환
+        display1Interval = setTimeout(() => {
+          randomNext();
+        }, scrollTexts[index - 1].duration);
         return;
       }
 
@@ -551,7 +649,10 @@
         elem.style.transform = `translateX(-${totalDistance}px)`;
       }, 500);
 
-      display1Interval = setTimeout(randomNext, scrollTexts[index - 1].duration);
+      // 메시지 표시 시간 후 화면 끄고 다음 메시지로 전환
+      display1Interval = setTimeout(() => {
+        randomNext();
+      }, scrollTexts[index - 1].duration);
     }
 
     // 두 번째 디스플레이 함수들
@@ -1958,17 +2059,20 @@
     const audioBtn = document.createElement('button');
     audioBtn.id = 'audioBtn';
     audioBtn.textContent = '🔊 오디오 활성화';
-    audioBtn.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 1001; padding: 10px 15px; background: #44aa44; color: white; border: 2px solid #228822; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;';
-    audioBtn.onclick = () => {
+    audioBtn.style.cssText = 'position: fixed; top: 70px; right: 20px; z-index: 10000; padding: 10px 15px; background: #44aa44; color: white; border: 2px solid #228822; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; pointer-events: auto;';
+    audioBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       if (!userInteracted) {
         userInteracted = true;
         console.log('오디오 활성화 버튼 클릭으로 사용자 상호작용 감지');
         // 모든 오디오를 미리 로드
-        const allAudios = ['announcement', 'dangsanAudio', 'dangsanSunAudio', 'mok6Audio', 'mok5bAudio', 'mok5cAudio', 'mokStadiumAudio'];
+        const allAudios = ['announcement', 'dangsanAudio', 'dangsanSunAudio', 'mok6Audio', 'mok5bAudio', 'mok5cAudio', 'mokStadiumAudio', 'wolchonAudio'];
         allAudios.forEach(audioId => {
           const audioElement = document.getElementById(audioId);
           if (audioElement) {
             audioElement.load();
+            console.log(`${audioId} 오디오 로드 완료`);
           }
         });
         audioBtn.textContent = '✅ 오디오 활성화됨';
@@ -1977,7 +2081,7 @@
           audioBtn.style.display = 'none';
         }, 2000);
       }
-    };
+    });
     document.body.appendChild(audioBtn);
 
     // 격자 생성
