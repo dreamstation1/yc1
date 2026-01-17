@@ -61,6 +61,47 @@
         height: calc((100vw - 20px) * 0.25);
         border-width: 8px;
       }
+      .title {
+        font-size: clamp(16px, 3vw, 22px);
+        top: 1px;
+      }
+      .title span {
+        margin: 0 clamp(3px, 1.5vw, 8px);
+      }
+      .scroll-text {
+        font-size: clamp(14px, 2.8vw, 20px);
+        bottom: 3px;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .third-top, .third-bottom, .fourth-top, .fourth-bottom {
+        font-size: clamp(14px, 2.8vw, 20px);
+        max-width: calc(100% - 6px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #scroll-text-9 {
+        font-size: clamp(16px, 3vw, 22px);
+        top: 2px;
+        max-width: calc(100% - 6px);
+      }
+      #fourth-top, #fourth-bottom {
+        font-size: clamp(14px, 2.8vw, 20px);
+        left: 3px;
+        max-width: calc(100% - 6px);
+      }
+      .top-label {
+        font-size: clamp(14px, 2.8vw, 20px);
+        top: 3px;
+        max-width: calc(100% - 6px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .scroll-lcd {
+        font-size: clamp(14px, 2.8vw, 20px);
+        max-width: 100%;
+        overflow: hidden;
+      }
     }
     .grid-overlay {
       position: absolute;
@@ -92,15 +133,16 @@
     /* 모바일에서만 굵게 표시 */
     @media (max-width: 768px) {
       .title {
-        font-size: 30px;
+        font-size: clamp(20px, 4vw, 30px);
         font-weight: 900;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        top: 2px;
       }
       .title span {
-        margin: 0 10px;
+        margin: 0 clamp(5px, 2vw, 10px);
       }
     }
     .title span { margin: 0 100px; }
@@ -118,13 +160,14 @@
     /* 모바일에서만 굵게 표시 */
     @media (max-width: 768px) {
       .scroll-text {
-        font-size: 30px;
-        bottom: 10px;
+        font-size: clamp(18px, 3.5vw, 28px);
+        bottom: 5px;
         font-weight: 900;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        line-height: 1.2;
       }
     }
     .yellow { color: yellow; }
@@ -149,32 +192,47 @@
     /* 모바일에서만 굵게 표시 */
     @media (max-width: 768px) {
       .third-top, .third-bottom, .fourth-top, .fourth-bottom {
-        font-size: 25px;
+        font-size: clamp(18px, 3.5vw, 24px);
         font-weight: 900;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        line-height: 1.2;
       }
       #scroll-text-9 {
-        font-size: 32px;
-        top: 5px;
+        font-size: clamp(20px, 4vw, 28px);
+        top: 3px;
       }
       #fourth-top, #fourth-bottom {
-        font-size: 32px;
-        left: 10px;
+        font-size: clamp(18px, 3.5vw, 26px);
+        left: 5px;
+        transform: none;
+        text-align: left;
       }
       .third-top {
-        top: 10px;
+        top: 5px;
+        max-width: calc(100% - 10px);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .third-bottom {
-        bottom: 10px;
+        bottom: 5px;
+        max-width: calc(100% - 10px);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .fourth-top {
-        top: 10px;
+        top: 5px;
+        max-width: calc(100% - 10px);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .fourth-bottom {
-        bottom: 10px;
+        bottom: 5px;
+        max-width: calc(100% - 10px);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     .third-top { top: 20px; }
@@ -223,11 +281,14 @@
     /* 모바일에서만 굵게 표시 */
     @media (max-width: 768px) {
       .top-label {
+        font-size: clamp(18px, 3.5vw, 26px);
         font-weight: 900;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        top: 5px;
+        line-height: 1.2;
       }
     }
     .scroll-lcd {
@@ -246,11 +307,13 @@
     /* 모바일에서만 굵게 표시 */
     @media (max-width: 768px) {
       .scroll-lcd {
+        font-size: clamp(18px, 3.5vw, 26px);
         font-weight: 900;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
+        -webkit-text-stroke: 1px rgba(0,0,0,0.3);
+        line-height: 1.2;
       }
     }
     .center-line {
@@ -617,6 +680,11 @@
         const isValidMessage = (index) => {
           // 같은 화면은 연속으로 나올 수 없음
           if (index === lastIndex) {
+            return false;
+          }
+          
+          // 같은 화면은 최근 3개 히스토리에 포함되어 있으면 나올 수 없음 (최소 3개의 다른 화면이 지나가야 함)
+          if (messageHistory.includes(index)) {
             return false;
           }
           
