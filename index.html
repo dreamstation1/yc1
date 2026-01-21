@@ -90,6 +90,51 @@
     }
     
     .title span { margin: 0 100px; }
+    
+    /* 모바일 반응형 - 화면 크기에 비례한 크기 조정 (1280px 기준) */
+    @media (max-width: 768px) {
+      .title {
+        font-size: clamp(25px, 9.375vw, 120px);
+      }
+      .title span {
+        margin: 0 clamp(20px, 7.8125vw, 100px);
+      }
+      .scroll-text {
+        font-size: clamp(25px, 9.375vw, 120px);
+        bottom: clamp(8px, 1.5625vw, 20px);
+      }
+      .third-top, .third-bottom, .fourth-top, .fourth-bottom {
+        font-size: clamp(22px, 7.8125vw, 100px);
+      }
+      #scroll-text-9 {
+        font-size: clamp(28px, 10.15625vw, 130px);
+        top: clamp(5px, 0.78125vw, 10px);
+      }
+      #fourth-top, #fourth-bottom {
+        font-size: clamp(28px, 10.15625vw, 130px);
+        left: clamp(8px, 1.5625vw, 20px);
+      }
+      .third-top {
+        top: clamp(8px, 1.5625vw, 20px);
+      }
+      .third-bottom {
+        bottom: clamp(8px, 1.5625vw, 20px);
+      }
+      .fourth-top {
+        top: clamp(8px, 1.5625vw, 20px);
+      }
+      .fourth-bottom {
+        bottom: clamp(8px, 1.5625vw, 20px);
+      }
+      .top-label {
+        font-size: clamp(24px, 8.59375vw, 110px);
+        top: clamp(8px, 1.5625vw, 20px);
+      }
+      .scroll-lcd {
+        font-size: clamp(24px, 8.59375vw, 110px);
+      }
+    }
+    
     .scroll-text {
       position: absolute;
       bottom: 20px;
