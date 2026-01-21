@@ -89,20 +89,6 @@
       align-items: center;
     }
     
-    /* 모바일에서만 굵게 표시 */
-    @media (max-width: 768px) {
-      .title {
-        font-size: 30px;
-        font-weight: 900;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
-      }
-      .title span {
-        margin: 0 10px;
-      }
-    }
     .title span { margin: 0 100px; }
     .scroll-text {
       position: absolute;
@@ -115,18 +101,6 @@
       transform: translateX(0);
     }
     
-    /* 모바일에서만 굵게 표시 */
-    @media (max-width: 768px) {
-      .scroll-text {
-        font-size: 30px;
-        bottom: 10px;
-        font-weight: 900;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
-      }
-    }
     .yellow { color: yellow; }
     .orange { color: orange; }
     .red { color: #E90000; }
@@ -146,37 +120,6 @@
       top: 10px;
     }
     
-    /* 모바일에서만 굵게 표시 */
-    @media (max-width: 768px) {
-      .third-top, .third-bottom, .fourth-top, .fourth-bottom {
-        font-size: 25px;
-        font-weight: 900;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
-      }
-      #scroll-text-9 {
-        font-size: 32px;
-        top: 5px;
-      }
-      #fourth-top, #fourth-bottom {
-        font-size: 32px;
-        left: 10px;
-      }
-      .third-top {
-        top: 10px;
-      }
-      .third-bottom {
-        bottom: 10px;
-      }
-      .fourth-top {
-        top: 10px;
-      }
-      .fourth-bottom {
-        bottom: 10px;
-      }
-    }
     .third-top { top: 20px; }
     .third-bottom { bottom: 20px; }
     .fourth-top { top: 20px; }
@@ -220,16 +163,6 @@
       display: none;
     }
     
-    /* 모바일에서만 굵게 표시 */
-    @media (max-width: 768px) {
-      .top-label {
-        font-weight: 900;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
-      }
-    }
     .scroll-lcd {
       position: absolute;
       top: 50%;
@@ -243,26 +176,24 @@
       display: none;
     }
     
-    /* 모바일에서만 굵게 표시 */
-    @media (max-width: 768px) {
-      .scroll-lcd {
-        font-weight: 900;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.6);
-        -webkit-text-stroke: 2px rgba(0,0,0,0.3);
-      }
-    }
     .center-line {
       position: absolute;
       left: 0;
       width: 100%;
-      height: 4px;
-      background: red;
-      top: 50%;
+      height: 10px;
+      top: calc(50% - 4px);
       transform: translateY(-50%);
-      z-index: 3;
+      z-index: 0;
       display: none;
+      flex-direction: row;
+      gap: 0;
+      align-items: stretch;
+    }
+    .center-line-cell {
+      flex: 1;
+      height: 100%;
+      background: red;
+      min-width: 0;
     }
     
     /* 버튼 스타일 */
@@ -444,7 +375,15 @@
       return square ? square.offsetWidth : 1280;
     }
     
-    const speed = 400;
+    // 스크롤 속도를 화면 크기에 비례하게 조정 (데스크톱 1280px 기준)
+    function getScrollSpeed() {
+      const baseWidth = 1280;
+      const currentWidth = getContainerWidth();
+      const ratio = currentWidth / baseWidth;
+      return 400 * ratio; // 데스크톱과 동일한 비율로 스크롤
+    }
+    
+    const speed = 400; // 기본값 (getScrollSpeed() 사용 시)
     let lastIndex = 0;
     let messageHistory = []; // 메시지 히스토리 (최근 3개 추적)
     let currentSpeed = 31.4;
@@ -736,7 +675,7 @@
         // 밑줄 스크롤 애니메이션
         const width = bottomElem.scrollWidth;
         const totalDistance = width + getContainerWidth();
-        const duration = totalDistance / speed;
+        const duration = totalDistance / getScrollSpeed();
         
         setTimeout(() => {
           bottomElem.style.transition = `transform ${duration}s linear`;
@@ -812,7 +751,7 @@
       updateColors(); // 색상 업데이트
       const width = elem.scrollWidth;
       const totalDistance = width + getContainerWidth();
-      const duration = totalDistance / speed;
+      const duration = totalDistance / getScrollSpeed();
       elem.style.transform = `translateX(0)`;
       elem.style.transition = 'none';
 
@@ -848,7 +787,7 @@
       topLabel.style.display = 'block';
       scrollLcd.textContent = '양평한신아파트, 9호선선유도역';
       scrollLcd.style.display = 'block';
-      centerLine.style.display = 'block';
+      centerLine.style.display = 'flex';
       updateColors(); // 색상 업데이트
       console.log('두 번째 디스플레이 요소들 표시 완료: 이번 정류소 - 양평한신아파트, 9호선선유도역');
       
@@ -858,7 +797,7 @@
 
       const textWidth = scrollLcd.scrollWidth;
       const totalDistance = textWidth + getContainerWidth();
-      const duration = totalDistance / speed;
+      const duration = totalDistance / getScrollSpeed();
 
       scrollLcd.style.transform = 'translateX(0)';
       scrollLcd.style.transition = 'none';
@@ -888,7 +827,7 @@
           scrollLcd.style.transition = 'none';
           scrollLcd.style.display = 'block';
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
         }, 500);
       }, 5380);
@@ -908,7 +847,7 @@
 
         const engTextWidth = scrollLcd.scrollWidth;
         const engTotalDistance = engTextWidth + getContainerWidth();
-        const engDuration = engTotalDistance / speed;
+        const engDuration = engTotalDistance / getScrollSpeed();
 
         setTimeout(() => {
           scrollLcd.style.transition = `transform ${engDuration}s linear`;
@@ -933,12 +872,12 @@
           scrollLcd.style.transition = 'none';
           scrollLcd.style.display = 'block';
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
 
           const eng2Width = scrollLcd.scrollWidth;
           const eng2TotalDistance = eng2Width + getContainerWidth();
-          const eng2Duration = eng2TotalDistance / speed;
+          const eng2Duration = eng2TotalDistance / getScrollSpeed();
 
           // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
           const engNextDelay = engNextText === 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital' ? 3500 : 500;
@@ -1017,7 +956,7 @@
       topLabel.style.display = 'block';
       scrollLcd.textContent = station.displayText;
       scrollLcd.style.display = 'block';
-      centerLine.style.display = 'block';
+      centerLine.style.display = 'flex';
       updateColors(); // 색상 업데이트
       
       // 목동5단지B상가와 목5동주민센터는 가운데 정렬, 나머지는 스크롤
@@ -1029,7 +968,7 @@
       } else {
         const textWidth = scrollLcd.scrollWidth;
         const totalDistance = textWidth + getContainerWidth();
-        const duration = totalDistance / speed;
+        const duration = totalDistance / getScrollSpeed();
 
         scrollLcd.style.left = '0';
         scrollLcd.style.top = '50%';
@@ -1047,7 +986,7 @@
       const audioElement = document.getElementById(audioId);
       if (audioElement) {
         console.log(`${audioId} 오디오 요소 찾음, 재생 시도`);
-        audioElement.volume = 1.0;
+        audioElement.volume = currentVolume;
         audioElement.currentTime = 0; // 처음부터 재생
         audioElement.play().then(() => {
           console.log(`${audioId} 오디오 재생 성공`);
@@ -1111,7 +1050,7 @@
             // 다음 정류소 텍스트도 스크롤 애니메이션 적용
             const nextTextWidth = scrollLcd.scrollWidth;
             const nextTotalDistance = nextTextWidth + getContainerWidth();
-            const nextDuration = nextTotalDistance / speed;
+            const nextDuration = nextTotalDistance / getScrollSpeed();
 
             setTimeout(() => {
               scrollLcd.style.transition = `transform ${nextDuration}s linear`;
@@ -1119,7 +1058,7 @@
             }, 500);
           }
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
         }, 500);
       }, 5380);
@@ -1157,7 +1096,7 @@
 
         const engTextWidth = scrollLcd.scrollWidth;
         const engTotalDistance = engTextWidth + getContainerWidth();
-        const engDuration = engTotalDistance / speed;
+        const engDuration = engTotalDistance / getScrollSpeed();
 
         setTimeout(() => {
           scrollLcd.style.transition = `transform ${engDuration}s linear`;
@@ -1190,7 +1129,7 @@
             if (currentDirection === 'up') {
               engNextText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital'; // 상행: 당산→목동
             } else {
-              engNextText = 'Line 2,9 Dangsan Station'; // 하행: 목동→당산
+              engNextText = 'Line 2 Dangsan Station'; // 하행: 목동→당산
             }
           } else if (station.name === '월촌중학교') {
             engNextText = 'Mokdong 2 Danji Stores';
@@ -1205,12 +1144,12 @@
           scrollLcd.style.transition = 'none';
           scrollLcd.style.display = 'block';
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
 
           const engNextTextWidth = scrollLcd.scrollWidth;
           const engNextTotalDistance = engNextTextWidth + getContainerWidth();
-          const engNextDuration = engNextTotalDistance / speed;
+          const engNextDuration = engNextTotalDistance / getScrollSpeed();
 
           setTimeout(() => {
             scrollLcd.style.transition = `transform ${engNextDuration}s linear`;
@@ -1271,7 +1210,7 @@
       topLabel.style.display = 'block';
       scrollLcd.textContent = station.displayText;
       scrollLcd.style.display = 'block';
-      centerLine.style.display = 'block';
+      centerLine.style.display = 'flex';
       updateColors(); // 색상 업데이트
       
       // 목동5단지B상가와 목5동주민센터는 가운데 정렬, 나머지는 스크롤
@@ -1283,7 +1222,7 @@
       } else {
         const textWidth = scrollLcd.scrollWidth;
         const totalDistance = textWidth + getContainerWidth();
-        const duration = totalDistance / speed;
+        const duration = totalDistance / getScrollSpeed();
 
         scrollLcd.style.left = '0';
         scrollLcd.style.top = '50%';
@@ -1317,7 +1256,7 @@
       const audioElement = document.getElementById(audioToPlay);
       if (audioElement) {
         console.log(`${audioToPlay} 오디오 요소 찾음, 재생 시도`);
-        audioElement.volume = 1.0;
+        audioElement.volume = currentVolume;
         audioElement.currentTime = 0; // 처음부터 재생
         audioElement.play().then(() => {
           console.log(`${audioToPlay} 오디오 재생 성공`);
@@ -1381,7 +1320,7 @@
             // 다음 정류소 텍스트도 스크롤 애니메이션 적용
             const nextTextWidth = scrollLcd.scrollWidth;
             const nextTotalDistance = nextTextWidth + getContainerWidth();
-            const nextDuration = nextTotalDistance / speed;
+            const nextDuration = nextTotalDistance / getScrollSpeed();
 
             setTimeout(() => {
               scrollLcd.style.transition = `transform ${nextDuration}s linear`;
@@ -1389,7 +1328,7 @@
             }, 500);
           }
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
         }, 500);
       }, 5380);
@@ -1414,7 +1353,7 @@
         } else if (station.name === '월촌중학교') {
           engText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital';
         } else if (station.name === '당산역') {
-          engText = 'Line 2,9 Dangsan Station';
+          engText = 'Line 2 Dangsan Station';
         }
 
         scrollLcd.textContent = engText;
@@ -1427,7 +1366,7 @@
 
         const engTextWidth = scrollLcd.scrollWidth;
         const engTotalDistance = engTextWidth + getContainerWidth();
-        const engDuration = engTotalDistance / speed;
+        const engDuration = engTotalDistance / getScrollSpeed();
 
         setTimeout(() => {
           scrollLcd.style.transition = `transform ${engDuration}s linear`;
@@ -1460,7 +1399,7 @@
             if (currentDirection === 'up') {
               engNextText = 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital'; // 상행: 당산→목동
             } else {
-              engNextText = 'Line 2,9 Dangsan Station'; // 하행: 목동→당산
+              engNextText = 'Line 2 Dangsan Station'; // 하행: 목동→당산
             }
           } else if (station.name === '월촌중학교') {
             engNextText = 'Mokdong 2 Danji Stores';
@@ -1475,12 +1414,12 @@
           scrollLcd.style.transition = 'none';
           scrollLcd.style.display = 'block';
 
-          centerLine.style.display = 'block';
+          centerLine.style.display = 'flex';
           updateColors(); // 색상 업데이트
 
           const eng2Width = scrollLcd.scrollWidth;
           const eng2TotalDistance = eng2Width + getContainerWidth();
-          const eng2Duration = eng2TotalDistance / speed;
+          const eng2Duration = eng2TotalDistance / getScrollSpeed();
 
           // 목동1단지상가 영어 안내만 3초 더 오래 보여줌
           const engNextDelay = engNextText === 'Mok 1 Danji Store. Ewha Womans Univ. Mok-dong Hospital' ? 3500 : 500;
@@ -1563,7 +1502,7 @@
       }
       
       console.log(`${audioId} 오디오 재생 시작`);
-      audioElement.volume = 1.0;
+      audioElement.volume = currentVolume;
       audioElement.play().then(() => {
         console.log(`${audioId} 오디오 재생 성공`);
       }).catch(error => {
@@ -2275,6 +2214,98 @@
     
     document.body.appendChild(toggleBtn);
     
+    // 볼륨 조절 버튼 생성
+    let currentVolume = 1.0; // 기본 볼륨 100%
+    const volumeBtn = document.createElement('button');
+    volumeBtn.textContent = '🔊';
+    volumeBtn.id = 'volumeBtn';
+    volumeBtn.style.cssText = 'position: fixed; top: 20px; right: 80px; z-index: 1001; padding: 15px 20px; background: #333; color: white; border: 3px solid #555; border-radius: 10px; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.3s;';
+    
+    // 볼륨 슬라이더 컨테이너
+    const volumeSliderContainer = document.createElement('div');
+    volumeSliderContainer.id = 'volumeSliderContainer';
+    volumeSliderContainer.style.cssText = 'position: fixed; top: 70px; right: 80px; z-index: 1002; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; display: none; flex-direction: column; gap: 10px; min-width: 200px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);';
+    
+    const volumeLabel = document.createElement('div');
+    volumeLabel.textContent = '볼륨: 100%';
+    volumeLabel.style.cssText = 'color: white; font-size: 14px; font-weight: bold; text-align: center;';
+    
+    const volumeSlider = document.createElement('input');
+    volumeSlider.type = 'range';
+    volumeSlider.min = '0';
+    volumeSlider.max = '100';
+    volumeSlider.value = '100';
+    volumeSlider.style.cssText = 'width: 100%; cursor: pointer;';
+    
+    volumeSlider.addEventListener('input', function() {
+      const volume = this.value / 100;
+      currentVolume = volume;
+      volumeLabel.textContent = `볼륨: ${this.value}%`;
+      
+      // 모든 오디오 요소의 볼륨 조절
+      const allAudios = ['announcement', 'dangsanAudio', 'dangsanSunAudio', 'mok6Audio', 'mok5bAudio', 'mok5cAudio', 'mokStadiumAudio', 'wolchonAudio'];
+      allAudios.forEach(audioId => {
+        const audioElement = document.getElementById(audioId);
+        if (audioElement) {
+          audioElement.volume = volume;
+        }
+      });
+      
+      // 볼륨 아이콘 업데이트
+      if (volume === 0) {
+        volumeBtn.textContent = '🔇';
+      } else if (volume < 0.5) {
+        volumeBtn.textContent = '🔉';
+      } else {
+        volumeBtn.textContent = '🔊';
+      }
+    });
+    
+    volumeSliderContainer.appendChild(volumeLabel);
+    volumeSliderContainer.appendChild(volumeSlider);
+    document.body.appendChild(volumeSliderContainer);
+    
+    let isVolumeSliderOpen = false;
+    volumeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      isVolumeSliderOpen = !isVolumeSliderOpen;
+      if (isVolumeSliderOpen) {
+        volumeSliderContainer.style.display = 'flex';
+      } else {
+        volumeSliderContainer.style.display = 'none';
+      }
+    });
+    
+    // 슬라이더 외부 클릭 시 닫기
+    document.addEventListener('click', function(e) {
+      if (isVolumeSliderOpen && !volumeSliderContainer.contains(e.target) && e.target !== volumeBtn) {
+        volumeSliderContainer.style.display = 'none';
+        isVolumeSliderOpen = false;
+      }
+    });
+    
+    document.body.appendChild(volumeBtn);
+    
+    // 모바일 스타일 추가
+    const volumeMobileStyle = `
+      @media (max-width: 768px) {
+        #volumeBtn {
+          top: 10px !important;
+          right: 60px !important;
+          padding: 12px 16px !important;
+          font-size: 18px !important;
+        }
+        #volumeSliderContainer {
+          top: 50px !important;
+          right: 10px !important;
+          min-width: 150px !important;
+        }
+      }
+    `;
+    const volumeStyleSheet = document.createElement('style');
+    volumeStyleSheet.textContent = volumeMobileStyle;
+    document.head.appendChild(volumeStyleSheet);
+    
     // 추가로 오디오 활성화 버튼도 표시
     const audioBtn = document.createElement('button');
     audioBtn.id = 'audioBtn';
@@ -2311,6 +2342,15 @@
       cell.className = 'cell';
       gridOverlay.appendChild(cell);
     }
+    
+    // 빨간 선을 작은 사각형들로 채우기
+    centerLine.style.display = 'flex';
+    for (let i = 0; i < 128; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'center-line-cell';
+      centerLine.appendChild(cell);
+    }
+    centerLine.style.display = 'none'; // 초기에는 숨김
 
     // 초기 색상 적용
     updateColors();
